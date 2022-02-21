@@ -6,13 +6,13 @@ from ev3dev2.sensor.lego import UltrasonicSensor
 
 p2 = LegoPort(INPUT_2)
 p2.mode = 'nxt-i2c'
-p2.set_device = 'lego-nxt-us'
 
 sleep(0.5)
 
 us = UltrasonicSensor(INPUT_2)
 
 us.mode = us.MODE_US_DIST_CM
-print(us.distance_centimeters)
-
+while True:
+  print(us.distance_centimeters)
+  sleep(1)
 
