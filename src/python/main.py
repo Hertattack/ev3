@@ -1,5 +1,4 @@
-from pybricks.hubs import EV3Brick
+#!/usr/bin/env python3
+from ev3dev2.sound import Sound
 
-ev3 = EV3Brick()
-
-ev3.speaker.beep()
+Sound().beep()
