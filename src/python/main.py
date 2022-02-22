@@ -4,6 +4,11 @@ from ev3dev2.sensor import INPUT_1, INPUT_2, INPUT_3, INPUT_4
 from ev3dev2.port import LegoPort
 from ev3dev2.sensor.lego import UltrasonicSensor
 
+# Input 1 = color sensor
+# Input 2 = nxt ultrasonic
+# Input 3 = button
+# Input 4 = infrared
+
 p2 = LegoPort(INPUT_2)
 p2.mode = 'nxt-i2c'
 
