@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 #import asyncio
-#from powerdup.hub import Hub
-#from powerdup.truck import Truck
-from powerdup.protocol import LegoWireless
+#from poweredup.hub import Hub
+#from poweredup.truck import Truck
+from src.poweredup import LegoWireless
 
 #hub = Hub()
 #asyncio.run(hub.connect())
