@@ -1,4 +1,5 @@
-from . import ValueMapping, MessageType, CommonMessageHeader
+from . import ValueMapping
+from .messages import Message, MessageType, CommonMessageHeader
 
 
 class ActionType(ValueMapping):
@@ -14,7 +15,17 @@ class ActionType(ValueMapping):
     ACTION_RESPONSE_BOOT_MODE = b'\x32'
 
 
-class ActionMessage:
+class ActionMessage(Message):
+    MESSAGE_TYPE = MessageType.HUB_ACTION
+
+    @classmethod
+    def parse_bytes(cls, payload: bytes):
+        payloadLength = len(payload)
+        if payloadLength > 1:
+            raise f"Unsupported payload length: {payloadLength}"
+
+        return ActionMessage(payload)
+
     def __init__(self, action_type: bytes):
         self.action_type = ActionType(action_type)
 

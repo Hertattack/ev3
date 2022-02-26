@@ -1,5 +1,5 @@
-from src.poweredup.protocol import CommonMessageHeader, MessageType,\
-    VersionNumberEncoding, LWPVersionNumberEncoding, SystemTypeDeviceNumber
+from src.poweredup.protocol import VersionNumberEncoding, LWPVersionNumberEncoding, SystemTypeDeviceNumber
+from src.poweredup.protocol.messages import MessageType, CommonMessageHeader
 
 
 class Operations:

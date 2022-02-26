@@ -1,4 +1,5 @@
-from . import ValueMapping, MessageType, CommonMessageHeader
+from . import ValueMapping
+from .messages import MessageType, CommonMessageHeader, Message
 
 
 class AlertType(ValueMapping):
@@ -20,7 +21,16 @@ class AlertStatus(ValueMapping):
     ALERT = b'\xFF'
 
 
-class AlertMessage:
+class AlertMessage(Message):
+    MESSAGE_TYPE = MessageType.HUB_ALERT
+
+    @classmethod
+    def parse_bytes(cls, message_bytes: bytes):
+        message_length = len(message_bytes)
+        if 2 > message_length > 3:
+            raise f"Expected message length to be between 5 and 6 bytes, was {message_length}"
+
+        return AlertMessage(message_bytes[0:1], message_bytes[1:2], None if message_length == 2 else message_bytes[2:])
 
     def __init__(self, alert_type: bytes, operation: bytes, payload: bytes = None):
         self.alert_type = AlertType(alert_type)

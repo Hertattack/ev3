@@ -1,4 +1,5 @@
-from . import CommonMessageHeader, MessageType, ValueMapping, VersionNumberEncoding
+from . import ValueMapping, VersionNumberEncoding
+from .messages import MessageType, CommonMessageHeader
 from ports import PortID
 
 

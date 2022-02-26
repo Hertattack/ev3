@@ -23,63 +23,6 @@ class ValueMapping:
         return mapping
 
 
-class MessageType(ValueMapping):
-    # Hub Related
-    HUB_PROPERTY = b'\x01'
-    HUB_ACTION = b'\x02'
-    HUB_ALERT = b'\x03'
-    HUB_ATTACHED_IO = b'\x04'
-    GENERIC_ERROR_MSG = b'\x05'
-    HW_NW_COMMAND = b'\x08'
-    FW_UPDATE_BOOT = b'\x10'
-    FW_UPDATE_LOCK_MEM = b'\x11'
-    FW_UPDATE_LOCK_STATUS_REQ = b'\x12'
-    FW_LOCK_STATUS = b'\x13'
-
-    # Port related
-    PORT_INFO_REQ = b'\x21'
-    PORT_MODE_INFO_REQ = b'\x22'
-    PORT_INPUT_FORMAT_SETUP_SINGLE = b'\x41'
-    PORT_INPUT_FORMAT_SETUP_COMBINED = b'\x42'
-    PORT_INFO = b'\x43'
-    PORT_MODE_INFO = b'\x44'
-    PORT_VALUE_SINGLE = b'\x45'
-    PORT_VALUE_COMBINED = b'\x46'
-    PORT_INPUT_FORMAT_SINGLE = b'\x47'
-    PORT_INPUT_FORMAT_COMBINED = b'\x48'
-    VIRTUAL_PORT_SETUP = b'\x61'
-    PORT_OUTPUT_COMMAND = b'\x81'
-    PORT_OUTPUT_COMMAND_FEEDBACK = b'\x82'
-
-
-class CommonMessageHeader:
-    """
-    Common Header for all messages
-
-    Size = 3 bytes.
-    """
-    HUB_ID = b'\x00'
-
-    def __init__(self, message_length: int, message_type: bytes):
-        self.messageLength = message_length
-        self.messageType = message_type
-
-    @property
-    def value(self):
-        actualLength = self.messageLength + 3
-        if actualLength <= 127:
-            return actualLength.to_bytes(1, byteorder="big", signed=False) + \
-                   CommonMessageHeader.HUB_ID + \
-                   self.messageType
-        else:
-            actualLength = actualLength + 1
-            remainder = actualLength % 127
-            multiplier = (actualLength - remainder) // 127
-            return (remainder + 127).to_bytes(1, byteorder='big', signed=False) + multiplier.to_bytes(1,
-                                                                                                      byteorder='big',
-                                                                                                      signed=False) + CommonMessageHeader.HUB_ID + self.messageType
-
-
 class VersionNumberEncoding:
     @classmethod
     def decode(cls, revision: bytes):
@@ -134,13 +77,13 @@ class SystemTypeDeviceNumber(ValueMapping):
 class AdvertisingMessage:
 
     def __init__(self, byte_input: bytes):
-        bytearray_input: bytearray = bytearray(byte_input)
-        self.length = int.from_bytes(bytearray_input[0], byteorder="big", signed=False)
-        self.dataTypeName = bytearray_input[1]
-        self.manufacturerId = int.from_bytes(bytes(bytearray_input[2:3]), byteorder="big", signed=False)
-        self.buttonState = int.from_bytes(bytearray_input[4], byteorder="big", signed=False) == 1
-        self.systemType = SystemTypeDeviceNumber(bytearray_input[5])
-        self.capabilities = bytearray_input[6]
-        self.last_network = bytearray_input[7]
-        self.status = bytearray_input[8]
-        self.option = bytearray_input[9]
+        self.length = int.from_bytes(byte_input[0], byteorder="big", signed=False)
+        self.dataTypeName = byte_input[1]
+        self.manufacturerId = int.from_bytes(bytes(byte_input[2:4]), byteorder="big", signed=False)
+        self.buttonState = int.from_bytes(byte_input[4], byteorder="big", signed=False) == 1
+        self.systemType = SystemTypeDeviceNumber(byte_input[5])
+        self.capabilities = byte_input[6]
+        self.last_network = byte_input[7]
+        self.status = byte_input[8]
+        self.option = byte_input[9]
+
