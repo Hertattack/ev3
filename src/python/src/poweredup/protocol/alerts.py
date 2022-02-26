@@ -20,7 +20,7 @@ class AlertStatus(ValueMapping):
     ALERT = b'\xFF'
 
 
-class Alert:
+class AlertMessage:
 
     def __init__(self, alert_type: bytes, operation: bytes, payload: bytes = None):
         self.alert_type = AlertType(alert_type)

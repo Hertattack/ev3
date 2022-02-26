@@ -81,7 +81,20 @@ class CommonMessageHeader:
 
 
 class VersionNumberEncoding:
-    def __init__(self, major, minor, patch, build):
+    @classmethod
+    def decode(cls, revision: bytes):
+        if len(revision) > 4:
+            raise "Version number cannot be more than 4 bytes."
+
+        major_and_minor = revision[0]
+        major = (major_and_minor & int("11110000", 2)) % 15
+        minor = major_and_minor & int("00001111", 2)
+        patch = revision[1]
+        build = int.from_bytes(revision, byteorder="big", signed=False) & int("11111111", 2)
+
+        return cls(major, minor, patch, build)
+
+    def __init__(self, major: int, minor: int, patch: int, build: int):
         if 0 <= major <= 7 and 0 <= minor <= 9 and 0 <= patch <= 99 and 0 <= build <= 9999:
             self.major = major
             self.minor = minor
