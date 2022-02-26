@@ -2,7 +2,28 @@ SERVICE_UUID = "00001623 -1212-EFDE-1623-785FEABCD123"
 CHARACTERISTIC_UUID = "00001624 -1212-EFDE-1623-785FEABCD123"
 
 
-class MessageTypes:
+class ValueMapping:
+
+    def __init__(self, value):
+        if not hasattr(self, "MAPPING"):
+            setattr(self, "MAPPING", self.get_mapping())
+
+        if self.MAPPING.__contains__(value):
+            self.value = value
+            self.name = self.MAPPING[value]
+        else:
+            raise f"Value {str(value)} is not supported in mapping."
+
+    def get_mapping(self):
+        mapping = {}
+        for item in dir(self):
+            if item != "MAPPING" and item.isupper():
+                value = getattr(self, item)
+                mapping[value] = item
+        return mapping
+
+
+class MessageType(ValueMapping):
     # Hub Related
     HUB_PROPERTY = b'\x01'
     HUB_ACTION = b'\x02'
@@ -89,32 +110,12 @@ class LWPVersionNumberEncoding:
         return int(f"{self.major}{self.minor}", 16).to_bytes(2, byteorder="big")
 
 
-class SystemTypeDeviceNumber:
-    LEGO_WEDO_HUB = int('00000000',2)
-    LEGO_DUPLO_TRAIN = int('00100000',2)
-    LEGO_BOOST_HUB = int('01000000',2)
-    LEGO_2_PORT_HUB = int('01000001',2)
-    LEGO_2_PORT_HANDSET = int('01000010',2)
-
-    MAPPING = {
-        LEGO_WEDO_HUB: "LEGO_WEDO_HUB",
-        LEGO_DUPLO_TRAIN: "LEGO_DUPLO_TRAIN",
-        LEGO_BOOST_HUB: "LEGO_BOOST_HUB",
-        LEGO_2_PORT_HUB: "LEGO_2_PORT_HUB",
-        LEGO_2_PORT_HANDSET: "LEGO_2_PORT_HANDSET"
-    }
-
-    def __init__(self, system_type: bytes):
-        if type(system_type) != bytes:
-            raise "Expected bytes as input."
-
-        self.value = system_type
-        self.int_value = int.from_bytes(system_type, byteorder="big", signed=False)
-
-        if SystemTypeDeviceNumber.MAPPING.__contains__(self.int_value):
-            self.name = SystemTypeDeviceNumber.MAPPING[self.int_value]
-        else:
-            raise "Unsupported system type."
+class SystemTypeDeviceNumber(ValueMapping):
+    LEGO_WEDO_HUB = b'\x00'
+    LEGO_DUPLO_TRAIN = b'\x20'
+    LEGO_BOOST_HUB = b'\x40'
+    LEGO_2_PORT_HUB = b'\x41'
+    LEGO_2_PORT_HANDSET = b'\x42'
 
 
 class AdvertisingMessage:
@@ -126,3 +127,7 @@ class AdvertisingMessage:
         self.manufacturerId = int.from_bytes(bytes(bytearray_input[2:3]), byteorder="big", signed=False)
         self.buttonState = int.from_bytes(bytearray_input[4], byteorder="big", signed=False) == 1
         self.systemType = SystemTypeDeviceNumber(bytearray_input[5])
+        self.capabilities = bytearray_input[6]
+        self.last_network = bytearray_input[7]
+        self.status = bytearray_input[8]
+        self.option = bytearray_input[9]

@@ -1,4 +1,4 @@
-from src.poweredup.protocol import CommonMessageHeader, MessageTypes,\
+from src.poweredup.protocol import CommonMessageHeader, MessageType,\
     VersionNumberEncoding, LWPVersionNumberEncoding, SystemTypeDeviceNumber
 
 
@@ -38,7 +38,7 @@ class HubProperty:
     @property
     def value(self):
         header = CommonMessageHeader(len(self.payload) + len(self.PROPERTY_REF) + len(self.operation),
-                                     MessageTypes.HUB_PROPERTY)
+                                     MessageType.HUB_PROPERTY)
         return header.value + self.PROPERTY_REF + self.operation + self.payload
 
 
