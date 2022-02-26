@@ -1,5 +1,5 @@
 from . import ValueMapping, VersionNumberEncoding
-from .messages import MessageType, CommonMessageHeader
+from .messages import MessageType, CommonMessageHeader, Message
 from ports import PortID
 
 
@@ -26,12 +26,33 @@ class IOType(ValueMapping):
     INTERNAL_TILT = b'\x00\x28'
 
 
-class AttachedIoMessage:
+class AttachedIoMessage(Message):
+    MESSAGE_TYPE = MessageType.HUB_ATTACHED_IO
 
-    def __init__(self, port_id, event_type: bytes,
-                 attached_io_type=None,
-                 hw_revision=None, sw_revision=None,
-                 port_a_id=None, port_b_id=None):
+    @classmethod
+    def parse_bytes(cls, message_bytes: bytes):
+        message_length = len(message_bytes)
+        if 2 > message_length > 12:
+            raise f"Message length of {message_length} out of bounds: 3 - 12"
+
+        port_id = PortID(message_bytes[0:1])
+        event_type = EventType(message_bytes[1:2])
+
+        attached_io_type = None if event_type.value == EventType.DETACHED_IO else IOType(message_bytes[2:4])
+
+        hw_revision = None if event_type.value != EventType.ATTACHED_IO else VersionNumberEncoding(message_bytes[4:9])
+        sw_revision = None if event_type.value != EventType.ATTACHED_IO else VersionNumberEncoding(message_bytes[9:])
+
+        port_id_a = None if event_type.value != EventType.VIRTUAL_IO else PortID(message_bytes[4:5])
+        port_id_b = None if event_type.value != EventType.VIRTUAL_IO else PortID(message_bytes[5:])
+
+        return AttachedIoMessage(port_id, event_type, attached_io_type, hw_revision, sw_revision, port_id_a, port_id_b)
+
+    def __init__(self, port_id: PortID, event_type: EventType,
+                 attached_io_type: IOType = None,
+                 hw_revision: VersionNumberEncoding = None, sw_revision: VersionNumberEncoding = None,
+                 port_a_id: PortID = None, port_b_id: PortID = None):
+
         if event_type == EventType.DETACHED_IO and (
                         attached_io_type is not None or
                         hw_revision is not None or sw_revision is not None or

@@ -1,5 +1,5 @@
 from . import ValueMapping
-from .messages import MessageType
+from .messages import Message, MessageType
 
 
 class ErrorCode(ValueMapping):
@@ -12,11 +12,17 @@ class ErrorCode(ValueMapping):
     OVERCURRENT = b'\x07'
     INTERNAL_ERROR = b'\x08'
 
-class ErrorMessage:
+
+class ErrorMessage(Message):
+    MESSAGE_TYPE = MessageType.GENERIC_ERROR_MSG
 
     @classmethod
-    def parse_bytes(cls, input_bytes: bytes):
+    def parse_bytes(cls, message_bytes: bytes):
+        message_length = len(message_bytes)
+        if message_length != 2:
+            raise f"Message length {message_length} differs from expected length: 2"
 
+        return ErrorMessage(message_bytes[0:1], ErrorCode(message_bytes[1:]))
 
     def __init__(self, message_type: bytes, error_code: ErrorCode):
         self.error_code = error_code
