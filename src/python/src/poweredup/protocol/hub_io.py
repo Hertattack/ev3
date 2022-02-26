@@ -52,7 +52,13 @@ class AttachedIoMessage:
         if event_type == EventType.VIRTUAL_IO and (port_a_id is None or port_b_id is None):
             raise "Expected port a and b to be set for virtual io."
 
-        self.event_type = EventType(event_type)
         self.port_id = PortID(port_id)
+        self.event_type = EventType(event_type)
+
         self.attached_io_type = None if attached_io_type is None else IOType(attached_io_type)
+
         self.hw_revision = None if hw_revision is None else VersionNumberEncoding(hw_revision)
+        self.sw_revision = None if sw_revision is None else VersionNumberEncoding(sw_revision)
+
+        self.port_id_a = None if port_a_id is None else PortID(port_a_id)
+        self.port_id_b = None if port_b_id is None else PortID(port_b_id)
