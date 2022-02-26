@@ -1,106 +1,13 @@
-SERVICE_UUID = "00001623 -1212-EFDE-1623-785FEABCD123"
-CHARACTERISTIC_UUID = "00001624 -1212-EFDE-1623-785FEABCD123"
+from src.poweredup.protocol import CommonMessageHeader, MessageTypes, VersionNumberEncoding, LWPVersionNumberEncoding
 
 
-class LegoWireless:
-
-    def __init__(self):
-        pass
-
-
-class MessageTypes:
-    # Hub Related
-    HUB_PROPERTY = b'\x01'
-    HUB_ACTION = b'\x02'
-    HUB_ALERT = b'\x03'
-    HUB_ATTACHED_IO = b'\x04'
-    GENERIC_ERROR_MSG = b'\x05'
-    HW_NW_COMMAND = b'\x08'
-    FW_UPDATE_BOOT = b'\x10'
-    FW_UPDATE_LOCK_MEM = b'\x11'
-    FW_UPDATE_LOCK_STATUS_REQ = b'\x12'
-    FW_LOCK_STATUS = b'\x13'
-
-    # Port related
-    PORT_INFO_REQ = b'\x21'
-    PORT_MODE_INFO_REQ = b'\x22'
-    PORT_INPUT_FORMAT_SETUP_SINGLE = b'\x41'
-    PORT_INPUT_FORMAT_SETUP_COMBINED = b'\x42'
-    PORT_INFO = b'\x43'
-    PORT_MODE_INFO = b'\x44'
-    PORT_VALUE_SINGLE = b'\x45'
-    PORT_VALUE_COMBINED = b'\x46'
-    PORT_INPUT_FORMAT_SINGLE = b'\x47'
-    PORT_INPUT_FORMAT_COMBINED = b'\x48'
-    VIRTUAL_PORT_SETUP = b'\x61'
-    PORT_OUTPUT_COMMAND = b'\x81'
-    PORT_OUTPUT_COMMAND_FEEDBACK = b'\x82'
-
-
-class HubPropertyOperations:
+class Operations:
     SET = b'\x01'
     ENABLE_UPDATES = b'\x02'
     DISABLE_UPDATES = b'\x03'
     RESET = b'\x04'
     REQUEST_UPDATE = b'\x05'
     UPDATE = b'\x06'
-
-
-"""
-Common Header for all messages
-
-Size = 3 bytes.
-"""
-
-
-class CommonMessageHeader:
-    HUB_ID = b'\x00'
-
-    def __init__(self, messageLength, messageType):
-        self.messageLength = messageLength
-        self.messageType = messageType
-
-    def getValue(self):
-        actualLength = self.messageLength + 3
-        if actualLength <= 127:
-            return actualLength.to_bytes(1, byteorder="big", signed=False) + \
-                   CommonMessageHeader.HUB_ID + \
-                   self.messageType
-        else:
-            actualLength = actualLength + 1
-            remainder = actualLength % 127
-            multiplier = (actualLength - remainder) // 127
-            return (remainder + 127).to_bytes(1, byteorder='big', signed=False) + multiplier.to_bytes(1,
-                                                                                                      byteorder='big',
-                                                                                                      signed=False) + CommonMessageHeader.HUB_ID + self.messageType
-
-
-class VersionNumberEncoding:
-    def __init__(self, major, minor, patch, build):
-        if 0 <= major <= 7 and 0 <= minor <= 9 and 0 <= patch <= 99 and 0 <= build <= 9999:
-            self.major = major
-            self.minor = minor
-            self.patch = patch
-            self.build = build
-        else:
-            raise f"Unsupported version number. 0 <= {major} <= 7, 0 <= {minor} 9, 0 <= {patch} 99, 0 <= {build} <= 9999"
-
-    def getValue(self):
-        return int(f"{self.major}{self.minor}", 16).to_bytes(1, byteorder="big") + \
-               int(f"{self.patch}", 16).to_bytes(1, byteorder="big") + \
-               int(f"{self.build}", 16).to_bytes(2, byteorder="big")
-
-
-class LWPVersionNumberEncoding:
-    def __init__(self, major, minor):
-        if 0 <= major <= 99 and 0 <= minor <= 99:
-            self.major = major
-            self.minor = minor
-        else:
-            raise f"Unsupported version number. 0 <= {major} <= 99, 0 <= {minor} 99"
-
-    def getValue(self):
-        return int(f"{self.major}{self.minor}", 16).to_bytes(2, byteorder="big")
 
 
 class HubProperty:
@@ -138,9 +45,9 @@ class HubProperty:
 class AdvertisingNameProperty(HubProperty):
     PROPERTY_REF = b'\x01'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.SET, HubPropertyOperations.ENABLE_UPDATES,
-        HubPropertyOperations.DISABLE_UPDATES, HubPropertyOperations.RESET,
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.SET, Operations.ENABLE_UPDATES,
+        Operations.DISABLE_UPDATES, Operations.RESET,
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
     def __init__(self, operation, name):
         if type(name) != str:
@@ -156,8 +63,8 @@ class AdvertisingNameProperty(HubProperty):
 class ButtonProperty(HubProperty):
     PROPERTY_REF = b'\x02'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.ENABLE_UPDATES, HubPropertyOperations.RESET,
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.ENABLE_UPDATES, Operations.RESET,
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
     TRUE = b'\x00'
     FALSE = b'\x01'
@@ -172,7 +79,7 @@ class ButtonProperty(HubProperty):
 class FWVersionProperty(HubProperty):
     PROPERTY_REF = b'\x03'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
     def __init__(self, operation, payload):
         if type(payload) != VersionNumberEncoding:
@@ -184,14 +91,14 @@ class FWVersionProperty(HubProperty):
 class HWVersionProperty(FWVersionProperty):
     PROPERTY_REF = b'\x04'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
 
 class RSSIProperty(HubProperty):
     PROPERTY_REF = b'\x05'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.ENABLE_UPDATES, HubPropertyOperations.DISABLE_UPDATES,
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.ENABLE_UPDATES, Operations.DISABLE_UPDATES,
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
     def __init__(self, operation, value):
         if type(value) != int:
@@ -204,8 +111,8 @@ class RSSIProperty(HubProperty):
 class BatteryVoltageProperty(HubProperty):
     PROPERTY_REF = b'\x06'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.ENABLE_UPDATES, HubPropertyOperations.DISABLE_UPDATES,
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.ENABLE_UPDATES, Operations.DISABLE_UPDATES,
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
     def __init__(self, operation, percentage):
         if type(percentage) != int or 0 > percentage > 100:
@@ -217,7 +124,7 @@ class BatteryVoltageProperty(HubProperty):
 class BatteryTypeProperty(HubProperty):
     PROPERTY_REF = b'\x07'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
     NORMAL = b'\x00'
     RECHARGEABLE = b'\x01'
@@ -232,21 +139,21 @@ class BatteryTypeProperty(HubProperty):
 class ManufacturerNameProperty(HubProperty):
     PROPERTY_REF = b'\x08'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.SET, HubPropertyOperations.ENABLE_UPDATES,
-        HubPropertyOperations.DISABLE_UPDATES, HubPropertyOperations.RESET,
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.SET, Operations.ENABLE_UPDATES,
+        Operations.DISABLE_UPDATES, Operations.RESET,
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
 
 class RadioFWVersionProperty(HubProperty):
     PROPERTY_REF = b'\x09'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
 
 class LegoWirelessProtocolVersionProperty(HubProperty):
     PROPERTY_REF = b'\x0A'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
     def __init__(self, operation, payload):
         if type(payload) != LWPVersionNumberEncoding:
@@ -258,7 +165,7 @@ class LegoWirelessProtocolVersionProperty(HubProperty):
 class SystemTypeIDProperty(HubProperty):
     PROPERTY_REF = b'\x0B'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
     LEGO_WEDO_HUB = '00000000'
     LEGO_DUPLO_TRAIN = '00100000'
@@ -280,24 +187,24 @@ class SystemTypeIDProperty(HubProperty):
 class HWNetworkIDProperty(HubProperty):
     PROPERTY_REF = b'\x0C'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.SET,
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.SET,
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
 
 class PrimaryMACProperty(HubProperty):
     PROPERTY_REF = b'\x0D'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
 
 class SecondaryMACProperty(HubProperty):
     PROPERTY_REF = b'\x0E'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
 
 class HardwareNWFamilyProperty(HubProperty):
     PROPERTY_REF = b'\x0F'
     SUPPORTED_OPERATIONS = [
-        HubPropertyOperations.SET,
-        HubPropertyOperations.REQUEST_UPDATE, HubPropertyOperations.UPDATE]
+        Operations.SET,
+        Operations.REQUEST_UPDATE, Operations.UPDATE]
