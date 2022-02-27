@@ -22,18 +22,26 @@ class ValueMapping:
                 mapping[value] = item
         return mapping
 
+    def __eq__(self, other):
+        if type(self) == type(other):
+            return self.value == other.value
+        elif type(other) == bytes:
+            return self.value == other
+
+        return False
+
 
 class VersionNumberEncoding:
     @classmethod
-    def decode(cls, revision: bytes):
-        if len(revision) > 4:
+    def parse_bytes(cls, revision: bytes):
+        if len(revision) > 5:
             raise "Version number cannot be more than 4 bytes."
 
-        major_and_minor = revision[0]
+        major_and_minor = int.from_bytes(revision[0:1], byteorder="big", signed=False)
         major = (major_and_minor & int("11110000", 2)) % 15
         minor = major_and_minor & int("00001111", 2)
-        patch = revision[1]
-        build = int.from_bytes(revision, byteorder="big", signed=False) & int("11111111", 2)
+        patch = int(revision[1:2].hex())
+        build = int(revision[2:].hex())
 
         return cls(major, minor, patch, build)
 
@@ -86,4 +94,3 @@ class AdvertisingMessage:
         self.last_network = byte_input[7]
         self.status = byte_input[8]
         self.option = byte_input[9]
-

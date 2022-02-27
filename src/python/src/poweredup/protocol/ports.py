@@ -1,5 +1,5 @@
 from . import ValueMapping
-from messages import Message, CommonMessageHeader, MessageType
+from .messages import Message, CommonMessageHeader, MessageType
 
 
 class PortID:

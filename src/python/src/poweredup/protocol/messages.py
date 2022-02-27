@@ -105,3 +105,18 @@ class Message:
 
         implementation = Message.IMPLEMENTATIONS[header.message_type.value]
         return implementation.parse_bytes(message_bytes[header_length:])
+
+    def __eq__(self, other):
+        self_has_value = "value" in dir(self)
+        if type(self) == type(other):
+            if self_has_value:
+                return self.value == other.value
+            else:
+                return self is other
+        elif type(other) == bytes:
+            if self_has_value:
+                return self.value == other
+            else:
+                return False
+
+        return False
