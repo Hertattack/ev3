@@ -6,9 +6,9 @@ It turned out to be an interesting journey of discovery and a good way to brush 
 
 My experimentation would not have been possible without a lot of help from other sources on the internet. See the [resources](#Resources) section at the end of this README for the list of links.
 
-# System design
+## System design
 
-## Hardware
+### Hardware
 
 ```mermaid
 graph TD
@@ -30,7 +30,13 @@ graph TD
     M <-->|BLE| P
 ```
 
-# Setup
+### Software
+
+See:
+
+* [LEGO Wireless BLE Protocol Implementation](src/poweredup/protocol)
+
+## Setup
 
 This is the record of how I have setup all of the components. I use python 3 on the ev3 by running [ev3dev](https://www.ev3dev.org/) on it.
 
