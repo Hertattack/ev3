@@ -28,6 +28,19 @@ class InformationType(ValueMapping):
     POSSIBLE_MODE_COMBINATIONS = b'\x02'
 
 
+class ModeInformationType(ValueMapping):
+    NAME = b'\x00'
+    RAW = b'\x01'
+    PERCENTAGE = b'\x02'
+    SI = b'\x03'
+    SYMBOL = b'\x04'
+    MAPPING = b'\x05'
+    INTERNAL_USE = b'\x06'
+    MOTOR_BIAS = b'\x07'
+    CAPABILITY_BITS = b'\x08'
+    VALUE_FORMAT = b'\x80'
+
+
 class PortInformationRequestMessage(Message):
     MESSAGE_TYPE = MessageType.PORT_INFO_REQ
 
@@ -45,5 +58,23 @@ class PortInformationRequestMessage(Message):
 
     @property
     def value(self):
-        header = CommonMessageHeader(2, PortInformationRequestMessage.MESSAGE_TYPE)
+        header = CommonMessageHeader(2, self.MESSAGE_TYPE)
         return header.value + self.port_id.value + self.information_type.value
+
+
+class PortModeInformationRequestMessage(Message):
+    MESSAGE_TYPE = MessageType.PORT_MODE_INFO_REQ
+
+    @classmethod
+    def parse_bytes(cls, message_bytes: bytes):
+        pass
+
+    def __init__(self, port_id: PortID, mode: bytes, mode_information: ModeInformationType):
+        self.port_id = port_id
+        self.mode = mode
+        self.mode_information = mode_information
+
+    @property
+    def value(self):
+        header = CommonMessageHeader(3,self.MESSAGE_TYPE)
+        return header.value + self.port_id.value + self.mode + self.mode_information.value

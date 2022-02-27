@@ -1,9 +1,8 @@
-from src.poweredup.protocol import VersionNumberEncoding, LWPVersionNumberEncoding,\
-    SystemTypeDeviceNumber, ProtocolError
-from src.poweredup.protocol.messages import MessageType, CommonMessageHeader
+from . import VersionNumberEncoding, LWPVersionNumberEncoding, SystemTypeDeviceNumber, ProtocolError, ValueMapping
+from .messages import MessageType, CommonMessageHeader, Message
 
 
-class Operations:
+class Operation(ValueMapping):
     SET = b'\x01'
     ENABLE_UPDATES = b'\x02'
     DISABLE_UPDATES = b'\x03'
@@ -11,67 +10,79 @@ class Operations:
     REQUEST_UPDATE = b'\x05'
     UPDATE = b'\x06'
 
+    def __init__(self, value: bytes, supported_values):
+        if value not in supported_values:
+            raise ProtocolError(f"Value: {value.hex()} is not in the list of supported values.")
 
-class HubProperty:
-    def __init__(self, operation: bytes, payload):
-        payloadType = type(payload)
-        if payloadType == bytes:
-            self.payload = payload
-        elif payloadType == bytearray:
-            self.payload = bytes(payload)
-        elif payloadType == str:
-            self.payload = bytes(payload, 'utf8')
-        else:
-            raise ProtocolError(f"Unsupported payload type: {payloadType}")
+        ValueMapping.__init__(self, value)
 
-        if operation in self.SUPPORTED_OPERATIONS:
-            self.operation = operation
-            self.payload = payload
-        else:
-            raise ProtocolError(f"Operation: {operation.hex()} not supported.")
 
-        if hasattr(self, "MAX_SIZE") and len(self.payload) > self.MAX_SIZE:
-            raise ProtocolError(f"Payload exceeds maximum size: {self.MAX_SIZE}")
+def build_index():
+    HubProperty.PROPERTY_IMPLEMENTATIONS = {}
+    for subclass in HubProperty.__subclasses__():
+        if hasattr(subclass, "PROPERTY_REF"):
+            Message.PROPERTY_IMPLEMENTATIONS[subclass.PROPERTY_REF] = subclass
 
-        if hasattr(self, "MIN_SIZE") and len(self.payload) < self.MIN_SIZE:
-            raise ProtocolError(f"Payload under minimum size: {self.MIN_SIZE}")
+
+class HubProperty(Message):
+    MESSAGE_TYPE = MessageType.HUB_PROPERTY
+
+    PROPERTY_IMPLEMENTATIONS = None
+
+    @classmethod
+    def parse_bytes(cls, message_bytes: bytes):
+        if HubProperty.PROPERTY_IMPLEMENTATIONS is None:
+            build_index()
+
+        payload_length = len(message_bytes) - 2
+
+        property_type = message_bytes[0:1]
+
+        if not HubProperty.PROPERTY_IMPLEMENTATIONS.__contains__(property_type):
+            raise ProtocolError(f"Unknown property type: {property_type}")
+
+        implementation = Message.PROPERTY_IMPLEMENTATIONS[property_type]
+        operation = Operation(message_bytes[1:2], implementation.SUPPORTED_OPERATIONS)
+        return implementation.parse_bytes(operation, message_bytes[2:] if payload_length > 0 else None)
+
+    def __init__(self, operation: Operation):
+        self.operation = operation
 
     @property
     def value(self):
-        header = CommonMessageHeader(len(self.payload) + len(self.PROPERTY_REF) + len(self.operation),
-                                     MessageType.HUB_PROPERTY)
-        return header.value + self.PROPERTY_REF + self.operation + self.payload
+        header = CommonMessageHeader(2, MessageType.HUB_PROPERTY)
+        return header.value + self.PROPERTY_REF + self.operation
 
 
 class AdvertisingNameProperty(HubProperty):
     PROPERTY_REF = b'\x01'
     SUPPORTED_OPERATIONS = [
-        Operations.SET, Operations.ENABLE_UPDATES,
-        Operations.DISABLE_UPDATES, Operations.RESET,
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.SET, Operation.ENABLE_UPDATES,
+        Operation.DISABLE_UPDATES, Operation.RESET,
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
     MIN_SIZE = 1
     MAX_SIZE = 14
 
-    def __init__(self, operation: bytes, name: str):
+    def __init__(self, operation: Operation, name: str):
         if type(name) != str:
             raise ProtocolError("Expected name as string.")
 
         payload = bytes(name, 'utf8')
 
-        HubProperty.__init__(self, operation, payload)
+        HubProperty.__init__(self, operation)
 
 
 class ButtonProperty(HubProperty):
     PROPERTY_REF = b'\x02'
     SUPPORTED_OPERATIONS = [
-        Operations.ENABLE_UPDATES, Operations.RESET,
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.ENABLE_UPDATES, Operation.RESET,
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
     TRUE = b'\x00'
     FALSE = b'\x01'
 
-    def __init__(self, operation: bytes, payload: bytes):
+    def __init__(self, operation: Operation, payload: bytes):
         if payload == ButtonProperty.TRUE or payload == ButtonProperty.TRUE:
             HubProperty.__init__(self, operation, payload)
         else:
@@ -80,10 +91,11 @@ class ButtonProperty(HubProperty):
 
 class FWVersionProperty(HubProperty):
     PROPERTY_REF = b'\x03'
-    SUPPORTED_OPERATIONS = [
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
 
-    def __init__(self, operation: bytes, payload: bytes):
+    SUPPORTED_OPERATIONS = [
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
+
+    def __init__(self, operation: Operation, payload: bytes):
         if type(payload) != VersionNumberEncoding:
             raise ProtocolError("Expected version number encoding as payload.")
         else:
@@ -93,16 +105,16 @@ class FWVersionProperty(HubProperty):
 class HWVersionProperty(FWVersionProperty):
     PROPERTY_REF = b'\x04'
     SUPPORTED_OPERATIONS = [
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
 
 class RSSIProperty(HubProperty):
     PROPERTY_REF = b'\x05'
     SUPPORTED_OPERATIONS = [
-        Operations.ENABLE_UPDATES, Operations.DISABLE_UPDATES,
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.ENABLE_UPDATES, Operation.DISABLE_UPDATES,
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
-    def __init__(self, operation: bytes, value: bytes):
+    def __init__(self, operation: Operation, value: bytes):
         if type(value) != int:
             raise ProtocolError("Only int value type supported")
         if -127 > value > 0:
@@ -114,10 +126,10 @@ class RSSIProperty(HubProperty):
 class BatteryVoltageProperty(HubProperty):
     PROPERTY_REF = b'\x06'
     SUPPORTED_OPERATIONS = [
-        Operations.ENABLE_UPDATES, Operations.DISABLE_UPDATES,
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.ENABLE_UPDATES, Operation.DISABLE_UPDATES,
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
-    def __init__(self, operation: bytes, percentage: bytes):
+    def __init__(self, operation: Operation, percentage: bytes):
         if type(percentage) != int or 0 > percentage > 100:
             raise ProtocolError("Expected battery percentage as integer between 0 and 100.")
 
@@ -127,12 +139,12 @@ class BatteryVoltageProperty(HubProperty):
 class BatteryTypeProperty(HubProperty):
     PROPERTY_REF = b'\x07'
     SUPPORTED_OPERATIONS = [
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
     NORMAL = b'\x00'
     RECHARGEABLE = b'\x01'
 
-    def __init__(self, operation: bytes, payload: bytes):
+    def __init__(self, operation: Operation, payload: bytes):
         if payload == BatteryTypeProperty.NORMAL or payload == BatteryTypeProperty.RECHARGEABLE:
             HubProperty.__init__(self, operation, payload)
         else:
@@ -142,30 +154,30 @@ class BatteryTypeProperty(HubProperty):
 class ManufacturerNameProperty(HubProperty):
     PROPERTY_REF = b'\x08'
     SUPPORTED_OPERATIONS = [
-        Operations.SET, Operations.ENABLE_UPDATES,
-        Operations.DISABLE_UPDATES, Operations.RESET,
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.SET, Operation.ENABLE_UPDATES,
+        Operation.DISABLE_UPDATES, Operation.RESET,
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
 
 class RadioFWVersionProperty(HubProperty):
     PROPERTY_REF = b'\x09'
     SUPPORTED_OPERATIONS = [
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
 
 class LegoWirelessProtocolVersionProperty(HubProperty):
     PROPERTY_REF = b'\x0A'
     SUPPORTED_OPERATIONS = [
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
-    def __init__(self, operation: bytes, payload: LWPVersionNumberEncoding):
+    def __init__(self, operation: Operation, payload: LWPVersionNumberEncoding):
         HubProperty.__init__(self, operation, payload.value)
 
 
 class SystemTypeIDProperty(HubProperty):
     PROPERTY_REF = b'\x0B'
     SUPPORTED_OPERATIONS = [
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
     def __init__(self, operation, system_type: SystemTypeDeviceNumber):
         HubProperty.__init__(self, operation, system_type.value)
@@ -174,24 +186,24 @@ class SystemTypeIDProperty(HubProperty):
 class HWNetworkIDProperty(HubProperty):
     PROPERTY_REF = b'\x0C'
     SUPPORTED_OPERATIONS = [
-        Operations.SET,
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.SET,
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
 
 class PrimaryMACProperty(HubProperty):
     PROPERTY_REF = b'\x0D'
     SUPPORTED_OPERATIONS = [
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
 
 class SecondaryMACProperty(HubProperty):
     PROPERTY_REF = b'\x0E'
     SUPPORTED_OPERATIONS = [
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
 
 
 class HardwareNWFamilyProperty(HubProperty):
     PROPERTY_REF = b'\x0F'
     SUPPORTED_OPERATIONS = [
-        Operations.SET,
-        Operations.REQUEST_UPDATE, Operations.UPDATE]
+        Operation.SET,
+        Operation.REQUEST_UPDATE, Operation.UPDATE]
