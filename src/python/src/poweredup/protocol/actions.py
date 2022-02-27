@@ -1,4 +1,4 @@
-from . import ValueMapping
+from . import ValueMapping, ProtocolError
 from .messages import Message, MessageType, CommonMessageHeader
 
 

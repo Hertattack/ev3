@@ -1,5 +1,5 @@
 import pytest
-from src.poweredup.protocol.messages import Message, MessageType
+from src.poweredup.protocol.messages import Message
 from src.poweredup.protocol.actions import ActionMessage, ActionType
 
 
