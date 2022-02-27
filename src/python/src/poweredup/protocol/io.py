@@ -1,4 +1,4 @@
-from . import ValueMapping, VersionNumberEncoding
+from . import ValueMapping, VersionNumberEncoding, ProtocolError
 from .messages import MessageType, CommonMessageHeader, Message
 from .ports import PortID
 
@@ -33,7 +33,7 @@ class AttachedIoMessage(Message):
     def parse_bytes(cls, message_bytes: bytes):
         message_length = len(message_bytes)
         if 2 > message_length > 12:
-            raise f"Message length of {message_length} out of bounds: 3 - 12"
+            raise ProtocolError(f"Message length of {message_length} out of bounds: 3 - 12")
 
         port_id = PortID(message_bytes[0:1])
         event_type = EventType(message_bytes[1:2])
@@ -57,22 +57,22 @@ class AttachedIoMessage(Message):
                 attached_io_type is not None or
                 hw_revision is not None or sw_revision is not None or
                 port_a_id is not None or port_b_id is not None):
-            raise "Unsupported arguments for detached IO."
+            raise ProtocolError("Unsupported arguments for detached IO.")
 
         if event_type.value != EventType.DETACHED_IO and attached_io_type is None:
-            raise "Expected attached io type to be specified."
+            raise ProtocolError("Expected attached io type to be specified.")
 
         if event_type.value == EventType.ATTACHED_IO and (port_a_id is not None or port_b_id is not None):
-            raise "Port a and b can only be specified for virtual events."
+            raise ProtocolError("Port a and b can only be specified for virtual events.")
 
         if event_type.value == EventType.ATTACHED_IO and (hw_revision is None or sw_revision is None):
-            raise "Expected hw and sw revision to be specified for attached io."
+            raise ProtocolError("Expected hw and sw revision to be specified for attached io.")
 
         if event_type.value == EventType.VIRTUAL_IO and (hw_revision is not None or sw_revision is not None):
-            raise "Expected hw and sw revision to be none for virtual io."
+            raise ProtocolError("Expected hw and sw revision to be none for virtual io.")
 
         if event_type.value == EventType.VIRTUAL_IO and (port_a_id is None or port_b_id is None):
-            raise "Expected port a and b to be set for virtual io."
+            raise ProtocolError("Expected port a and b to be set for virtual io.")
 
         self.port_id = port_id
         self.event_type = event_type

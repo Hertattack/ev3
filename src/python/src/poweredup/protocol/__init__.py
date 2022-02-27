@@ -12,7 +12,7 @@ class ValueMapping:
             self.value = value
             self.name = self.MAPPING[value]
         else:
-            raise f"Value {str(value)} is not supported in mapping."
+            raise ProtocolError(f"Value {str(value)} is not supported in mapping.")
 
     def get_mapping(self):
         mapping = {}
@@ -35,7 +35,7 @@ class VersionNumberEncoding:
     @classmethod
     def parse_bytes(cls, revision: bytes):
         if len(revision) > 5:
-            raise "Version number cannot be more than 4 bytes."
+            raise ProtocolError("Version number cannot be more than 4 bytes.")
 
         major_and_minor = int.from_bytes(revision[0:1], byteorder="big", signed=False)
         major = (major_and_minor & int("11110000", 2)) % 15
@@ -52,7 +52,7 @@ class VersionNumberEncoding:
             self.patch = patch
             self.build = build
         else:
-            raise f"Unsupported version number. 0 <= {major} <= 7, 0 <= {minor} 9, 0 <= {patch} 99, 0 <= {build} <= 9999"
+            raise ProtocolError(f"Unsupported version number. 0 <= {major} <= 7, 0 <= {minor} 9, 0 <= {patch} 99, 0 <= {build} <= 9999")
 
     @property
     def value(self):
@@ -67,7 +67,7 @@ class LWPVersionNumberEncoding:
             self.major = major
             self.minor = minor
         else:
-            raise f"Unsupported version number. 0 <= {major} <= 99, 0 <= {minor} 99"
+            raise ProtocolError(f"Unsupported version number. 0 <= {major} <= 99, 0 <= {minor} 99")
 
     @property
     def value(self):
@@ -94,3 +94,9 @@ class AdvertisingMessage:
         self.last_network = byte_input[7]
         self.status = byte_input[8]
         self.option = byte_input[9]
+
+
+class ProtocolError(Exception):
+    def __init__(self, message, input_bytes=None):
+        self.message = message
+        self.input_bytes = input_bytes

@@ -1,4 +1,4 @@
-from src.poweredup.protocol import ValueMapping
+from . import ValueMapping, ProtocolError
 
 
 class MessageType(ValueMapping):
@@ -44,7 +44,7 @@ class CommonMessageHeader:
     def parse_bytes(cls, message_header_bytes: bytes):
         header_length = len(message_header_bytes)
         if 3 > header_length > 4:
-            raise f"Unsupported header length {header_length}"
+            raise ProtocolError(f"Unsupported header length {header_length}")
 
         message_type = message_header_bytes[header_length - 1]
 
@@ -101,7 +101,7 @@ class Message:
 
         header: CommonMessageHeader = CommonMessageHeader.parse_bytes(message_bytes[0:header_length])
         if not Message.IMPLEMENTATIONS.__contains__(header.message_type.value):
-            raise f"Unknown message type: {header.message_type.name}"
+            raise ProtocolError(f"Unknown message type: {header.message_type.name}")
 
         implementation = Message.IMPLEMENTATIONS[header.message_type.value]
         return implementation.parse_bytes(message_bytes[header_length:])

@@ -1,4 +1,5 @@
-from src.poweredup.protocol import VersionNumberEncoding, LWPVersionNumberEncoding, SystemTypeDeviceNumber
+from src.poweredup.protocol import VersionNumberEncoding, LWPVersionNumberEncoding,\
+    SystemTypeDeviceNumber, ProtocolError
 from src.poweredup.protocol.messages import MessageType, CommonMessageHeader
 
 
@@ -21,19 +22,19 @@ class HubProperty:
         elif payloadType == str:
             self.payload = bytes(payload, 'utf8')
         else:
-            raise f"Unsupported payload type: {payloadType}"
+            raise ProtocolError(f"Unsupported payload type: {payloadType}")
 
         if operation in self.SUPPORTED_OPERATIONS:
             self.operation = operation
             self.payload = payload
         else:
-            raise f"Operation: {operation.hex()} not supported."
+            raise ProtocolError(f"Operation: {operation.hex()} not supported.")
 
         if hasattr(self, "MAX_SIZE") and len(self.payload) > self.MAX_SIZE:
-            raise f"Payload exceeds maximum size: {self.MAX_SIZE}"
+            raise ProtocolError(f"Payload exceeds maximum size: {self.MAX_SIZE}")
 
         if hasattr(self, "MIN_SIZE") and len(self.payload) < self.MIN_SIZE:
-            raise f"Payload under minimum size: {self.MIN_SIZE}"
+            raise ProtocolError(f"Payload under minimum size: {self.MIN_SIZE}")
 
     @property
     def value(self):
@@ -54,7 +55,7 @@ class AdvertisingNameProperty(HubProperty):
 
     def __init__(self, operation: bytes, name: str):
         if type(name) != str:
-            raise "Expected name as string."
+            raise ProtocolError("Expected name as string.")
 
         payload = bytes(name, 'utf8')
 
@@ -74,7 +75,7 @@ class ButtonProperty(HubProperty):
         if payload == ButtonProperty.TRUE or payload == ButtonProperty.TRUE:
             HubProperty.__init__(self, operation, payload)
         else:
-            raise "Button value is not within range."
+            raise ProtocolError("Button value is not within range.")
 
 
 class FWVersionProperty(HubProperty):
@@ -84,7 +85,7 @@ class FWVersionProperty(HubProperty):
 
     def __init__(self, operation: bytes, payload: bytes):
         if type(payload) != VersionNumberEncoding:
-            raise "Expected version number encoding as payload."
+            raise ProtocolError("Expected version number encoding as payload.")
         else:
             HubProperty.__init__(self, operation, payload.value)
 
@@ -103,9 +104,9 @@ class RSSIProperty(HubProperty):
 
     def __init__(self, operation: bytes, value: bytes):
         if type(value) != int:
-            raise "Only int value type supported"
+            raise ProtocolError("Only int value type supported")
         if -127 > value > 0:
-            raise f"{value} out of range [-127, 0]"
+            raise ProtocolError(f"{value} out of range [-127, 0]")
 
         HubProperty.__init__(operation, value.to_bytes(1, byteorder="big", signed=True))
 
@@ -118,7 +119,7 @@ class BatteryVoltageProperty(HubProperty):
 
     def __init__(self, operation: bytes, percentage: bytes):
         if type(percentage) != int or 0 > percentage > 100:
-            raise "Expected battery percentage as integer between 0 and 100."
+            raise ProtocolError("Expected battery percentage as integer between 0 and 100.")
 
         HubProperty.__init__(self, operation, int.to_bytes(percentage, 1, byteorder="big"))
 
@@ -135,7 +136,7 @@ class BatteryTypeProperty(HubProperty):
         if payload == BatteryTypeProperty.NORMAL or payload == BatteryTypeProperty.RECHARGEABLE:
             HubProperty.__init__(self, operation, payload)
         else:
-            raise "Battery type is not within range."
+            raise ProtocolError("Battery type is not within range.")
 
 
 class ManufacturerNameProperty(HubProperty):

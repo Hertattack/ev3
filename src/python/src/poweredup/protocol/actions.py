@@ -22,7 +22,7 @@ class ActionMessage(Message):
     def parse_bytes(cls, payload: bytes):
         payloadLength = len(payload)
         if payloadLength > 1:
-            raise f"Unsupported payload length: {payloadLength}"
+            raise ProtocolError(f"Unsupported payload length: {payloadLength}")
 
         return ActionMessage(payload)
 

@@ -1,4 +1,4 @@
-from . import ValueMapping
+from . import ValueMapping, ProtocolError
 from .messages import Message, CommonMessageHeader, MessageType
 
 
@@ -13,10 +13,10 @@ class PortID:
             id_value = id_input
 
         if id_value is None:
-            raise f"Unsupported id type supplied is not supported: {id_type}"
+            raise ProtocolError(f"Unsupported id type supplied is not supported: {id_type}")
 
         if 0 > id_value > 255:
-            raise f"Expected id value between 0 and 255, but was {id_value}"
+            raise ProtocolError(f"Expected id value between 0 and 255, but was {id_value}")
 
         self.value = id_value.to_bytes(1, byteorder="big", signed=False)
         self.id = id_value
@@ -35,7 +35,7 @@ class PortInformationRequestMessage(Message):
     def parse_bytes(cls, message_bytes: bytes):
         message_length = len(message_bytes)
         if message_length != 2:
-            raise f"Message length different from expected length (2) = {message_length}"
+            raise ProtocolError(f"Message length different from expected length (2) = {message_length}")
 
         return PortInformationRequestMessage(PortID(message_bytes[0:1]), InformationType(message_bytes[1:]))
 

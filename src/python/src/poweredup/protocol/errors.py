@@ -20,7 +20,7 @@ class ErrorMessage(Message):
     def parse_bytes(cls, message_bytes: bytes):
         message_length = len(message_bytes)
         if message_length != 2:
-            raise f"Message length {message_length} differs from expected length: 2"
+            raise ProtocolError(f"Message length {message_length} differs from expected length: 2")
 
         return ErrorMessage(message_bytes[0:1], ErrorCode(message_bytes[1:]))
 
