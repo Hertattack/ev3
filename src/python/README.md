@@ -57,4 +57,41 @@ The steps followed:
 
 ## Information used along the way
 
-* [pyb00st](https://github.com/JorgePe/pyb00st)
+- https://github.com/ev3dev/ev3dev-lang-python-demo
+- [https://docs.ev3dev.org/projects/lego-linux-drivers/en/ev3dev-jessie/sensors.html#id36](https://docs.ev3dev.org/projects/lego-linux-drivers/en/ev3dev-jessie/sensors.html#id36)
+- https://github.com/ev3dev/ev3dev-lang-python
+- [https://ev3dev-lang.readthedocs.io/projects/python-ev3dev/en/ev3dev-stretch/index.html](https://ev3dev-lang.readthedocs.io/projects/python-ev3dev/en/ev3dev-stretch/index.html)
+- [https://github.com/undera/pylgbst/blob/master/pylgbst/comms/cbluepy.py](https://github.com/undera/pylgbst/blob/master/pylgbst/comms/cbluepy.py)
+- [https://ianharvey.github.io/bluepy-doc/](https://ianharvey.github.io/bluepy-doc/)
+- https://github.com/virantha/bricknil
+- https://github.com/oscaracena/pygattlib
+- [https://wiki.python.org/moin/BitManipulation](https://wiki.python.org/moin/BitManipulation)
+- [https://docs.python.org/3/library/stdtypes.html](https://docs.python.org/3/library/stdtypes.html)
+- [https://geektechstuff.com/2020/06/01/python-and-bluetooth-part-1-scanning-for-devices-and-services-python/](https://geektechstuff.com/2020/06/01/python-and-bluetooth-part-1-scanning-for-devices-and-services-python/)
+- [https://docs.python.org/3/library/asyncio.html](https://docs.python.org/3/library/asyncio.html)
+- [pyb00st](https://github.com/JorgePe/pyb00st)
+- Lego Powered Up control from Node: [https://github.com/nathankellenicki/node-poweredup/](https://github.com/nathankellenicki/node-poweredup/)
+- Expected part of powered up hub - [https://rebrickable.com/parts/22127/hub-powered-up-4-port-technic-control-clip-opening/](https://rebrickable.com/parts/22127/hub-powered-up-4-port-technic-control-clip-opening/)
+- PyBricks [https://pybricks.com](https://pybricks.com/)
+- PyBricks Q&A [https://www.eurobricks.com/forum/index.php?/forums/topic/186132-pybricks-qa/](https://www.eurobricks.com/forum/index.php?/forums/topic/186132-pybricks-qa/)
+- EV3 Dev [https://www.ev3dev.org/docs/getting-started/](https://www.ev3dev.org/docs/getting-started/)
+- Hub aansturen / bluetooth hacking https://github.com/ev3dev/ev3dev/issues/521
+- Bluetooth protocol [https://lego.github.io/lego-ble-wireless-protocol-docs/index.html#document-index](https://lego.github.io/lego-ble-wireless-protocol-docs/index.html#document-index) and https://github.com/LEGO/lego-ble-wireless-protocol-docs
+- C# implementation to control the hub https://github.com/sharpbrick/powered-up
+- Arduino hardware [https://create.arduino.cc/projecthub/haraldholzner/bluetooth-remote-control-for-lego-technic-hub-6ef303](https://create.arduino.cc/projecthub/haraldholzner/bluetooth-remote-control-for-lego-technic-hub-6ef303)
+- Lego Powered Up documenation [https://www.eurobricks.com/forum/index.php?/forums/topic/168975-documenting-the-lego-poweredup-system/](https://www.eurobricks.com/forum/index.php?/forums/topic/168975-documenting-the-lego-poweredup-system/)
+- [Lego Powered Up Documentation](https://www.notion.so/Lego-Powered-Up-Documentation-a6e2111d78484bc181c01cf8ec36e09a)
+- Python [https://sites.google.com/site/ev3devpython/](https://sites.google.com/site/ev3devpython/)
+- Share internet over bluetooth [https://computersluggish.com/windows-tutorials/desktop/how-to-share-your-internet-over-bluetooth-in-windows-10/](https://computersluggish.com/windows-tutorials/desktop/how-to-share-your-internet-over-bluetooth-in-windows-10/)
+- Remote C# for EV3 [http://www.monobrick.dk/software/monobrick/](http://www.monobrick.dk/software/monobrick/)
+- .Net 6 [https://docs.microsoft.com/en-us/dotnet/core/install/linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux)
+- Nanoframework .Net for embedded [https://www.nanoframework.net](https://www.nanoframework.net/)
+- lego sdk’s [https://www.lego.com/en-us/themes/mindstorms/downloads](https://www.lego.com/en-us/themes/mindstorms/downloads)
+- lego engineering site [http://www.legoengineering.com/ev3-sensors/](http://www.legoengineering.com/ev3-sensors/)
+- lego ev3 api .net https://github.com/BrianPeek/legoev3
+- .net installation on debian [https://docs.microsoft.com/en-us/dotnet/core/install/linux-debian](https://docs.microsoft.com/en-us/dotnet/core/install/linux-debian)
+- .net installation script [https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script)
+- Bluetooth linux [https://www.jaredwolff.com/get-started-with-bluetooth-low-energy/#get-acquainted-with-the-tools](https://www.jaredwolff.com/get-started-with-bluetooth-low-energy/#get-acquainted-with-the-tools)
+- Moar bluetooth [https://reverse-engineering-ble-devices.readthedocs.io/en/latest/script_creation/00_script_creation.html](https://reverse-engineering-ble-devices.readthedocs.io/en/latest/script_creation/00_script_creation.html)
+- EV3 Powered Up (https://www.youtube.com/watch?v=RFHCahxJdAM)
+- BT LE support for ev3 - https://github.com/ev3dev/ev3dev/issues/711
