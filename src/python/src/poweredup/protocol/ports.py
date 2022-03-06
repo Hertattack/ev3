@@ -22,6 +22,11 @@ class PortID:
         self.id = id_value
 
 
+class NotificationEnabledType(ValueMapping):
+    DISABLED = b'\x00'
+    ENABLED = b'\x01'
+
+
 class InformationType(ValueMapping):
     PORT_VALUE = b'\x00'
     MODE_INFO = b'\x01'
@@ -40,6 +45,125 @@ class ModeInformationType(ValueMapping):
     CAPABILITY_BITS = b'\x08'
     VALUE_FORMAT = b'\x80'
 
+
+class SubCommandType(ValueMapping):
+    SET_MODE_AND_DATASET = b'\x01'
+    LOCK_LPF2_DEV_SETUP = b'\x02'
+    UNLOCK_MULTI_UPDATE_ENABLED = b'\x03'
+    UNLOCK_MULTI_UPDATE_DISABLED = b'\x04'
+    UNUSED = b'\x05'
+    RESET_SENSOR_TO_LEGACY_MODE = b'\x06'
+
+
+class DataSetFormatType(ValueMapping):
+    DATA_8BIT_SIGNED_INT = b'\x01'
+    DATA_16BIT_SIGNED_LE_INT = b'\x02'
+    DATA_32BIT_SIGNED_LE_INT = b'\x03'
+    DATA_FLOAT = b'\x04'
+
+
+class PortModes:
+    MODE_0 = 1
+    MODE_1 = 2
+    MODE_2 = 4
+    MODE_3 = 8
+    MODE_4 = 16
+    MODE_5 = 32
+    MODE_6 = 64
+    MODE_7 = 128
+    MODE_8 = 256
+    MODE_9 = 512
+    MODE_10 = 1024
+    MODE_11 = 2048
+    MODE_12 = 4069
+    MODE_13 = 8192
+    MODE_14 = 16384
+    MODE_15 = 32768
+
+    END_OF_COMBINATIONS = 0
+
+    def __init__(self, mode_value: bytes):
+        if len(mode_value) > 2:
+            raise ProtocolError(f"Port mode cannot be longer than 2 bytes.")
+
+        mode_int_value = int.from_bytes(mode_value, byteorder="big", signed=False)
+        self.mode_0 = mode_int_value & PortModes.MODE_0 == PortModes.MODE_0
+        self.mode_1 = mode_int_value & PortModes.MODE_1 == PortModes.MODE_1
+        self.mode_2 = mode_int_value & PortModes.MODE_2 == PortModes.MODE_2
+        self.mode_3 = mode_int_value & PortModes.MODE_3 == PortModes.MODE_3
+        self.mode_4 = mode_int_value & PortModes.MODE_4 == PortModes.MODE_4
+        self.mode_5 = mode_int_value & PortModes.MODE_5 == PortModes.MODE_5
+        self.mode_6 = mode_int_value & PortModes.MODE_6 == PortModes.MODE_6
+        self.mode_7 = mode_int_value & PortModes.MODE_7 == PortModes.MODE_7
+        self.mode_8 = mode_int_value & PortModes.MODE_8 == PortModes.MODE_8
+        self.mode_9 = mode_int_value & PortModes.MODE_9 == PortModes.MODE_9
+        self.mode_10 = mode_int_value & PortModes.MODE_10 == PortModes.MODE_10
+        self.mode_11 = mode_int_value & PortModes.MODE_11 == PortModes.MODE_11
+        self.mode_12 = mode_int_value & PortModes.MODE_12 == PortModes.MODE_12
+        self.mode_13 = mode_int_value & PortModes.MODE_13 == PortModes.MODE_13
+        self.mode_14 = mode_int_value & PortModes.MODE_14 == PortModes.MODE_14
+        self.mode_15 = mode_int_value & PortModes.MODE_15 == PortModes.MODE_15
+
+    @property
+    def value(self):
+        return int.to_bytes( \
+                 PortModes.MODE_0 if self.mode_0 else 0 + \
+                                                      PortModes.MODE_1 if self.mode_1 else 0 + \
+                                                                                           PortModes.MODE_2 if self.mode_2 else 0 + \
+                                                                                                                                PortModes.MODE_3 if self.mode_3 else 0 + \
+                                                                                                                                                                     PortModes.MODE_4 if self.mode_4 else 0 + \
+                                                                                                                                                                                                          PortModes.MODE_5 if self.mode_5 else 0 + \
+                                                                                                                                                                                                                                               PortModes.MODE_6 if self.mode_6 else 0 + \
+                                                                                                                                                                                                                                                                                    PortModes.MODE_7 if self.mode_7 else 0 + \
+                                                                                                                                                                                                                                                                                                                         PortModes.MODE_8 if self.mode_8 else 0 + \
+                                                                                                                                                                                                                                                                                                                                                              PortModes.MODE_9 if self.mode_9 else 0 + \
+                                                                                                                                                                                                                                                                                                                                                                                                   PortModes.MODE_10 if self.mode_10 else 0 + \
+                                                                                                                                                                                                                                                                                                                                                                                                                                          PortModes.MODE_11 if self.mode_11 else 0 + \
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 PortModes.MODE_12 if self.mode_12 else 0 + \
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        PortModes.MODE_13 if self.mode_13 else 0 + \
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               PortModes.MODE_14 if self.mode_14 else 0 + \
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      PortModes.MODE_15 if self.mode_15 else 0, \
+                2, byteorder="big", signed=False)
+
+class PortModeCombinationIndex(ValueMapping):
+    INDEX_0 = b'\x01'
+    INDEX_1 = b'\x02'
+    INDEX_2 = b'\x03'
+    INDEX_3 = b'\x04'
+    INDEX_4 = b'\x05'
+    INDEX_5 = b'\x06'
+    INDEX_6 = b'\x07'
+    INDEX_7 = b'\x08'
+
+
+class Capabilities:
+    OUTPUT_FROM_HUB = 1
+    INPUT_FROM_HUB = 2
+    LOGICAL_COMBINABLE = 4
+    LOGICAL_SYNCABLE = 8
+
+    def __init__(self, mask: bytes):
+        if len(mask) > 1:
+            raise ProtocolError("Unsupported number of capability bytes.")
+
+        mask_int_value = int.from_bytes(mask, byteorder="big")
+
+        if mask_int_value > 15:
+            raise ProtocolError(f"Unsupported bit-mask for capabilities {bin(ord(mask))}")
+
+        self.is_output = mask_int_value & Capabilities.OUTPUT_FROM_HUB == Capabilities.OUTPUT_FROM_HUB
+        self.is_input = mask_int_value & Capabilities.INPUT_FROM_HUB == Capabilities.INPUT_FROM_HUB
+        self.is_combinable = mask_int_value & Capabilities.LOGICAL_COMBINABLE == Capabilities.LOGICAL_COMBINABLE
+        self.is_syncable = mask_int_value & Capabilities.LOGICAL_SYNCABLE == Capabilities.LOGICAL_SYNCABLE
+
+    @property
+    def value(self):
+        return int.to_bytes( \
+            Capabilities.OUTPUT_FROM_HUB if self.is_output else 0 + \
+            Capabilities.INPUT_FROM_HUB if self.is_input else 0 + \
+            Capabilities.LOGICAL_COMBINABLE if self.is_combinable else 0 + \
+            Capabilities.LOGICAL_SYNCABLE if self.is_syncable else 0, \
+            1, byteorder="big", signed=False)
 
 class PortInformationRequestMessage(Message):
     MESSAGE_TYPE = MessageType.PORT_INFO_REQ
@@ -98,19 +222,17 @@ class PortInputFormatSetupSingle(Message):
         port_id = PortID(message_bytes[0:1])
         mode = message_bytes[1:2]
         delta_interval = message_bytes[2:6]
-        notification_enabled = int.from_bytes(message_bytes[6:], byteorder="big", signed=False)
+        notification_enabled = NotificationEnabledType(message_bytes[7:])
 
         return PortInputFormatSetupSingle(port_id, mode, delta_interval, notification_enabled)
 
-    def __init__(self, port_id: PortID, mode: bytes, delta_interval: bytes, notification_enabled: int):
+    def __init__(self, port_id: PortID, mode: bytes, delta_interval: bytes,
+                 notification_enabled: NotificationEnabledType):
         if len(mode) != 1:
             raise ProtocolError("Expected length of mode is 1 bytes.")
 
         if len(delta_interval) != 4:
             raise ProtocolError("Expected length of delta interval is 4 bytes (uint32)")
-
-        if 0 > notification_enabled > 1:
-            raise ProtocolError("Expected notification value to be 0 = Disabled and 1 = Enabled")
 
         self.port_id = port_id
         self.mode = mode
@@ -121,7 +243,7 @@ class PortInputFormatSetupSingle(Message):
     def value(self):
         header = CommonMessageHeader(7, self.MESSAGE_TYPE)
         return header.value + self.port_id.value + self.mode + self.delta_interval + \
-               self.notification_enabled.to_bytes(1, byteorder="big", signed=False)
+               self.notification_enabled.value
 
 
 class PortInputFormatSetupCombined(Message):
@@ -129,11 +251,84 @@ class PortInputFormatSetupCombined(Message):
 
     @classmethod
     def parse_bytes(cls, message_bytes: bytes):
-        pass
+        message_length = len(message_bytes)
+        if message_length < 2:
+            raise ProtocolError("Expected message length of at least 2 bytes")
 
-    def __init__(self):
+        port_id = PortID(message_bytes[0:1])
+        sub_command = SubCommandType(message_bytes[1:2])
+
+        if sub_command == SubCommandType.SET_MODE_AND_DATASET and message_length != 4:
+            raise ProtocolError(f"Expected message length of exactly 4 bytes for sub command: {sub_command.name}")
+
+        if sub_command != SubCommandType.SET_MODE_AND_DATASET and message_length != 2:
+            raise ProtocolError(f"Expected message length of exactly 2 bytes for sub command: {sub_command.name}")
+
+        if sub_command != SubCommandType.SET_MODE_AND_DATASET:
+            return PortInputFormatSetupCombined(port_id, sub_command)
+
+        combination_index = PortModeCombinationIndex(message_bytes[2:3])
+
+        return PortInputFormatSetupCombined(port_id, sub_command, combination_index, message_bytes[3:])
+
+    def __init__(self, port_id: PortID, sub_command: SubCommandType,
+                 combination_index: PortModeCombinationIndex = None, mode_dataset: bytes = None):
+
+        if sub_command == SubCommandType.SET_MODE_AND_DATASET:
+            if combination_index is None or mode_dataset is None:
+                raise ProtocolError("For setting mode and data set, combination index and mode data set value needed.")
+        elif combination_index is not None or mode_dataset is not None:
+            raise ProtocolError("For other sub commands than setting mode and data set, combination index and mode "
+                                "and data set value are not allowed.")
+
+        self.port_id = port_id
+        self.sub_command = sub_command
+        self.combination_index = combination_index
+        self.mode_dataset = mode_dataset
+
+    @property
+    def value(self):
+        length = 2 if self.sub_command != SubCommandType.SET_MODE_AND_DATASET else 4
+        header = CommonMessageHeader(length, self.MESSAGE_TYPE)
+        value = header + self.port_id.value + self.sub_command.value
+        if self.sub_command == SubCommandType.SET_MODE_AND_DATASET:
+            value = value + self.combination_index.value + self.mode_dataset
+        return value
+
+
+class PortInformation(Message):
+    MESSAGE_TYPE = MessageType.PORT_INFO
+
+    @classmethod
+    def parse_bytes(cls, message_bytes: bytes):
+        message_length = len(message_bytes)
+
+        if message_length < 4:
+            raise ProtocolError("At least 4 bytes of payload expected.")
+
+        port_id = PortID(message_bytes[0:1])
+        information_type = InformationType(message_bytes[1:2])
+
+        if information_type != InformationType.MODE_INFO \
+                and information_type != InformationType.POSSIBLE_MODE_COMBINATIONS:
+            raise ProtocolError(f"Unsupported information type for this message type: {information_type.name}")
+
+        if information_type == InformationType.MODE_INFO:
+            if message_length != 8:
+                raise ProtocolError(f"Expected length of 8 bytes for message payload for information type: {information_type.name}.")
+
+            capabilities = Capabilities(message_bytes[2:3])
+            total_count_mode = int.from_bytes(message_bytes[3:4], byteorder="big", signed=False)
+            input_modes = PortModes(message_bytes[4:6])
+            output_modes = PortModes(message_bytes[6:])
+
+            return PortInformation(port_id, information_type, capabilities, total_count_mode, input_modes, output_modes)
+
+    def __init__(self, port_id: PortID, information_type: InformationType,
+                 capabilities, total_count_mode, input_modes, output_modes):
         pass
 
     @property
     def value(self):
-        pass
+        header = CommonMessageHeader(9, self.MESSAGE_TYPE)
+        return header.value
