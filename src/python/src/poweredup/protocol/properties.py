@@ -17,11 +17,16 @@ class Operation(ValueMapping):
         ValueMapping.__init__(self, value)
 
 
+class BatteryType(ValueMapping):
+    NORMAL = b'\x00'
+    RECHARGEABLE = b'\x01'
+
+
 def build_index():
     HubProperty.PROPERTY_IMPLEMENTATIONS = {}
     for subclass in HubProperty.__subclasses__():
         if hasattr(subclass, "PROPERTY_REF"):
-            Message.PROPERTY_IMPLEMENTATIONS[subclass.PROPERTY_REF] = subclass
+            HubProperty.PROPERTY_IMPLEMENTATIONS[subclass.PROPERTY_REF] = subclass
 
 
 class HubProperty(Message):
@@ -41,17 +46,23 @@ class HubProperty(Message):
         if not HubProperty.PROPERTY_IMPLEMENTATIONS.__contains__(property_type):
             raise ProtocolError(f"Unknown property type: {property_type}")
 
-        implementation = Message.PROPERTY_IMPLEMENTATIONS[property_type]
+        implementation = HubProperty.PROPERTY_IMPLEMENTATIONS[property_type]
         operation = Operation(message_bytes[1:2], implementation.SUPPORTED_OPERATIONS)
         return implementation.parse_bytes(operation, message_bytes[2:] if payload_length > 0 else None)
 
-    def __init__(self, operation: Operation):
+    def __init__(self, operation: Operation, payload: bytes = None):
         self.operation = operation
+        self.payload = payload
 
     @property
     def value(self):
-        header = CommonMessageHeader(2, MessageType.HUB_PROPERTY)
-        return header.value + self.PROPERTY_REF + self.operation
+        message_bytes = self.PROPERTY_REF + self.operation.value
+
+        if self.payload is not None:
+            message_bytes = message_bytes + self.payload
+
+        header = CommonMessageHeader(len(message_bytes), MessageType.HUB_PROPERTY)
+        return header.value + message_bytes
 
 
 class AdvertisingNameProperty(HubProperty):
@@ -85,6 +96,7 @@ class ButtonProperty(HubProperty):
     def __init__(self, operation: Operation, payload: bytes):
         if payload == ButtonProperty.TRUE or payload == ButtonProperty.TRUE:
             HubProperty.__init__(self, operation, payload)
+            self.value = True if payload == ButtonProperty.TRUE else False
         else:
             raise ProtocolError("Button value is not within range.")
 
@@ -95,11 +107,13 @@ class FWVersionProperty(HubProperty):
     SUPPORTED_OPERATIONS = [
         Operation.REQUEST_UPDATE, Operation.UPDATE]
 
-    def __init__(self, operation: Operation, payload: bytes):
-        if type(payload) != VersionNumberEncoding:
-            raise ProtocolError("Expected version number encoding as payload.")
-        else:
-            HubProperty.__init__(self, operation, payload.value)
+    @classmethod
+    def parse_bytes(cls, operation: Operation, message_bytes: bytes):
+        return cls(operation, VersionNumberEncoding.parse_bytes(message_bytes))
+
+    def __init__(self, operation: Operation, version: VersionNumberEncoding):
+        HubProperty.__init__(self, operation, version.value)
+        self.version = version
 
 
 class HWVersionProperty(FWVersionProperty):
@@ -114,13 +128,13 @@ class RSSIProperty(HubProperty):
         Operation.ENABLE_UPDATES, Operation.DISABLE_UPDATES,
         Operation.REQUEST_UPDATE, Operation.UPDATE]
 
-    def __init__(self, operation: Operation, value: bytes):
-        if type(value) != int:
-            raise ProtocolError("Only int value type supported")
-        if -127 > value > 0:
-            raise ProtocolError(f"{value} out of range [-127, 0]")
+    def __init__(self, operation: Operation, payload: bytes):
+        self.value = int.from_bytes(payload, byteorder="big", signed=True)
 
-        HubProperty.__init__(operation, value.to_bytes(1, byteorder="big", signed=True))
+        if -127 > self.value > 0:
+            raise ProtocolError(f"{self.value} out of range [-127, 0]")
+
+        HubProperty.__init__(operation, payload)
 
 
 class BatteryVoltageProperty(HubProperty):
@@ -129,11 +143,12 @@ class BatteryVoltageProperty(HubProperty):
         Operation.ENABLE_UPDATES, Operation.DISABLE_UPDATES,
         Operation.REQUEST_UPDATE, Operation.UPDATE]
 
-    def __init__(self, operation: Operation, percentage: bytes):
-        if type(percentage) != int or 0 > percentage > 100:
-            raise ProtocolError("Expected battery percentage as integer between 0 and 100.")
+    def __init__(self, operation: Operation, payload: bytes):
+        self.value = int.from_bytes(payload, byteorder="big", signed=False)
+        if 0 > self.value > 100:
+            raise ProtocolError("Expected battery percentage as between 0 and 100.")
 
-        HubProperty.__init__(self, operation, int.to_bytes(percentage, 1, byteorder="big"))
+        HubProperty.__init__(self, operation, payload)
 
 
 class BatteryTypeProperty(HubProperty):
@@ -141,14 +156,9 @@ class BatteryTypeProperty(HubProperty):
     SUPPORTED_OPERATIONS = [
         Operation.REQUEST_UPDATE, Operation.UPDATE]
 
-    NORMAL = b'\x00'
-    RECHARGEABLE = b'\x01'
-
     def __init__(self, operation: Operation, payload: bytes):
-        if payload == BatteryTypeProperty.NORMAL or payload == BatteryTypeProperty.RECHARGEABLE:
-            HubProperty.__init__(self, operation, payload)
-        else:
-            raise ProtocolError("Battery type is not within range.")
+        self.value = BatteryType(payload)
+        HubProperty.__init__(self, operation, payload)
 
 
 class ManufacturerNameProperty(HubProperty):
@@ -170,8 +180,9 @@ class LegoWirelessProtocolVersionProperty(HubProperty):
     SUPPORTED_OPERATIONS = [
         Operation.REQUEST_UPDATE, Operation.UPDATE]
 
-    def __init__(self, operation: Operation, payload: LWPVersionNumberEncoding):
-        HubProperty.__init__(self, operation, payload.value)
+    def __init__(self, operation: Operation, payload: bytes):
+        self.value = LWPVersionNumberEncoding(payload)
+        HubProperty.__init__(self, operation, payload)
 
 
 class SystemTypeIDProperty(HubProperty):
@@ -179,8 +190,9 @@ class SystemTypeIDProperty(HubProperty):
     SUPPORTED_OPERATIONS = [
         Operation.REQUEST_UPDATE, Operation.UPDATE]
 
-    def __init__(self, operation, system_type: SystemTypeDeviceNumber):
-        HubProperty.__init__(self, operation, system_type.value)
+    def __init__(self, operation, payload: bytes):
+        self.value = SystemTypeDeviceNumber(payload)
+        HubProperty.__init__(self, operation, payload)
 
 
 class HWNetworkIDProperty(HubProperty):
