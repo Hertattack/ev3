@@ -1,6 +1,6 @@
 from . import ValueMapping, ProtocolError
 from .messages import Message, CommonMessageHeader, MessageType
-
+import struct
 
 class PortID:
     def __init__(self, id_input):
@@ -433,12 +433,12 @@ class PortModeInformationFormat:
         match mode_information_type.value:
             case PortModeInformationName.MODE_INFORMATION_TYPE.value:
                 return PortModeInformationName.parse_bytes(mode, message_bytes[2:])
-            case PortModeInformationRaw.MODE_INFORMATION_TYPE.value:
-                return PortModeInformationRaw.parse_bytes(mode, message_bytes[2:])
-            case PortModeInformationPercentage.MODE_INFORMATION_TYPE.value:
-                return PortModeInformationPercentage.parse_bytes(mode, message_bytes[2:])
-            case PortModeInformationSi.MODE_INFORMATION_TYPE.value:
-                return PortModeInformationSi.parse_bytes(mode, message_bytes[2:])
+            case PortModeInformationRawRange.MODE_INFORMATION_TYPE.value:
+                return PortModeInformationRawRange.parse_bytes(mode, message_bytes[2:])
+            case PortModeInformationPercentageRange.MODE_INFORMATION_TYPE.value:
+                return PortModeInformationPercentageRange.parse_bytes(mode, message_bytes[2:])
+            case PortModeInformationSiRange.MODE_INFORMATION_TYPE.value:
+                return PortModeInformationSiRange.parse_bytes(mode, message_bytes[2:])
 
         raise ProtocolError(f"Unimplemented port mode information type encountered: '{mode_information_type.name}'")
 
@@ -492,30 +492,43 @@ class PortModeInformationName(PortModeInformationFormat):
 
 
 class PortModeInformationFloatingPointValues(PortModeInformationFormat):
-    MAX_LENGTH = 8
+    EXPECTED_LENGTH = 8
 
     @classmethod
     def parse_bytes(cls, mode: bytes, message_bytes: bytes):
-        cls.validate(message_bytes, max_length=PortModeInformationName.MAX_LENGTH)
+        cls.validate(message_bytes, expected_length=cls.EXPECTED_LENGTH)
 
-        return cls(mode, message_bytes)
+        try:
+            min_value = struct.unpack(">f", message_bytes[0:4])[0]
+        except Exception as e:
+            raise ProtocolError(f"Unable to unpack min value: '{message_bytes[0:4].hex()}' to 4 byte float. Message: {e}")
 
-    def __init__(self, mode, byte_value):
+        try:
+            max_value = struct.unpack(">f", message_bytes[4:])[0]
+        except Exception as e:
+            raise ProtocolError(f"Unable to unpack max value: '{message_bytes[4].hex()}' to 4 byte float. Message: {e}")
+
+        return cls(mode, min_value, max_value)
+
+    def __init__(self, mode, min_value, max_value):
         super().__init__(mode)
-        self.byte_value = byte_value
+        self.min_value = min_value
+        self.max_value = max_value
 
     @property
     def value(self):
-        return super().value + self.byte_value
+        min_value = struct.pack(">f", self.min_value)
+        max_value = struct.pack(">f", self.max_value)
+        return super().value + min_value + max_value
 
 
-class PortModeInformationRaw(PortModeInformationFloatingPointValues):
+class PortModeInformationRawRange(PortModeInformationFloatingPointValues):
     MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.RAW)
 
 
-class PortModeInformationPercentage(PortModeInformationFloatingPointValues):
+class PortModeInformationPercentageRange(PortModeInformationFloatingPointValues):
     MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.PERCENTAGE)
 
 
-class PortModeInformationSi(PortModeInformationFloatingPointValues):
+class PortModeInformationSiRange(PortModeInformationFloatingPointValues):
     MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.SI)

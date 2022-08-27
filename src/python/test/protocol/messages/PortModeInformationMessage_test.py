@@ -1,3 +1,5 @@
+import struct
+
 from src.poweredup.protocol import ProtocolError
 from src.poweredup.protocol.messages import Message
 from src.poweredup.protocol.ports import PortModeInformation
@@ -31,24 +33,39 @@ def test_port_mode_information_name_message_validates_allowed_characters():
 
 
 def test_port_mode_information_raw_message_is_supported():
-    message_bytes = b'\x0A\x00\x44\x01\x00\x01\x10\x20\x30\x40'
+    min_value = struct.pack(">f", 2.0)
+    max_value = struct.pack(">f", -6.5)
+
+    message_bytes = b'\x0E\x00\x44\x01\x00\x01' + min_value + max_value
     message = Message.parse_bytes(message_bytes)
+
     assert message.value.hex() == message_bytes.hex()
     assert message.mode_information_type.name == "RAW"
-    assert message.mode_information.byte_value.hex() == "10203040"
+    assert message.mode_information.min_value == float(2.0)
+    assert message.mode_information.max_value == float(-6.5)
 
 
 def test_port_mode_information_percentage_message_is_supported():
-    message_bytes = b'\x0A\x00\x44\x01\x00\x02\xAB\x20\x30\x40'
+    min_value = struct.pack(">f", 5.0)
+    max_value = struct.pack(">f", -4.5)
+
+    message_bytes = b'\x0E\x00\x44\x01\x00\x02' + min_value + max_value
     message = Message.parse_bytes(message_bytes)
+
     assert message.value.hex() == message_bytes.hex()
     assert message.mode_information_type.name == "PERCENTAGE"
-    assert message.mode_information.byte_value.hex() == "ab203040"
+    assert message.mode_information.min_value == float(5.0)
+    assert message.mode_information.max_value == float(-4.5)
 
 
 def test_port_mode_information_si_message_is_supported():
-    message_bytes = b'\x0A\x00\x44\x01\x00\x03\x10\xAA\x30\x40'
+    min_value = struct.pack(">f", -1)
+    max_value = struct.pack(">f", 2)
+
+    message_bytes = b'\x0E\x00\x44\x01\x00\x03' + min_value + max_value
     message = Message.parse_bytes(message_bytes)
+
     assert message.value.hex() == message_bytes.hex()
     assert message.mode_information_type.name == "SI"
-    assert message.mode_information.byte_value.hex() == "10aa3040"
+    assert message.mode_information.min_value == float(-1)
+    assert message.mode_information.max_value == float(2)
