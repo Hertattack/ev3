@@ -21,7 +21,7 @@ class ValueMapping:
     def get_mapping(self):
         mapping = {}
         for item in dir(self):
-            if item != "MAPPING" and item.isupper():
+            if item != ValueMapping.__MAPPING_PROPERTY__ and item.isupper():
                 value = getattr(self, item)
                 if value is None:
                     value = ValueMapping.__NONE__
