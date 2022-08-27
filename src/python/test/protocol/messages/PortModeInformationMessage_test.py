@@ -5,7 +5,7 @@ from src.poweredup.protocol.ports import PortModeInformation
 
 def test_port_mode_information_name_message_is_supported():
     # header, port id, mode, type, name
-    message_bytes = b'\x09\x00\x44\x01\x00\x00\x48\x45\x4C\x4C\x4F'
+    message_bytes = b'\x0b\x00\x44\x01\x00\x00\x48\x45\x4C\x4C\x4F'
     message = Message.parse_bytes(message_bytes)
     assert message.value.hex() == message_bytes.hex()
     assert message.mode_information_type.name == "NAME"
@@ -29,3 +29,10 @@ def test_port_mode_information_name_message_validates_allowed_characters():
     except ProtocolError as protocolError:
         assert protocolError.message == 'Name contains unsupported characters: `'
 
+
+def test_port_mode_information_raw_message_is_supported():
+    message_bytes = b'\x0A\x00\x44\x01\x00\x01\x10\x20\x30\x40'
+    message = Message.parse_bytes(message_bytes)
+    assert message.value.hex() == message_bytes.hex()
+    assert message.mode_information_type.name == "RAW"
+    assert message.mode_information.raw_value.hex() == "10203040"
