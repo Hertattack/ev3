@@ -3,14 +3,18 @@ CHARACTERISTIC_UUID = "00001624 -1212-EFDE-1623-785FEABCD123"
 
 
 class ValueMapping:
+    __NONE__ = '__None__'
+    __MAPPING_PROPERTY__ = '__Mapping__'
 
     def __init__(self, value):
-        if not hasattr(self, "MAPPING"):
-            setattr(self, "MAPPING", self.get_mapping())
+        if not hasattr(self, ValueMapping.__MAPPING_PROPERTY__):
+            setattr(self, ValueMapping.__MAPPING_PROPERTY__, self.get_mapping())
 
-        if self.MAPPING.__contains__(value):
+        lookupValue = ValueMapping.__NONE__ if value is None else value
+
+        if self.__Mapping__.__contains__(lookupValue):
             self.value = value
-            self.name = self.MAPPING[value]
+            self.name = self.__Mapping__[lookupValue]
         else:
             raise ProtocolError(f"Value {str(value)} is not supported in mapping.")
 
@@ -19,6 +23,10 @@ class ValueMapping:
         for item in dir(self):
             if item != "MAPPING" and item.isupper():
                 value = getattr(self, item)
+                if value is None:
+                    value = ValueMapping.__NONE__
+                if mapping.__contains__(value):
+                    raise f"Value mapping contains duplicate entry: {str(value)}"
                 mapping[value] = item
         return mapping
 

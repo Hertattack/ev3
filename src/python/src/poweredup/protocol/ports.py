@@ -137,6 +137,19 @@ class PortModeCombinationIndex(ValueMapping):
     INDEX_7 = b'\x08'
 
 
+class PortModeInformationType(ValueMapping):
+    NAME = b'\x00'
+    RAW = b'\x01'
+    PERCENTAGE = b'\x02'
+    SI = b'\x03'
+    SYMBOL = b'\x04'
+    MAPPING = b'\x05'
+    INTERNAL = b'\x06'
+    MOTOR_BIAS_PCT = b'\x07'
+    CAPABILITIES = b'\x08'
+    VALUE_FORMAT = b'\x80'
+
+
 class Capabilities:
     OUTPUT_FROM_HUB = 1
     INPUT_FROM_HUB = 2
@@ -383,3 +396,46 @@ class PortInformation(Message):
                 message_bytes = message_bytes + self.mode_combinations[combination_index].value
                 combination_index = combination_index + 1
             return header.value + self.port_id.value + self.information_type.value + message_bytes
+
+
+class PortModeInformation(Message):
+    MESSAGE_TYPE = MessageType.PORT_MODE_INFO
+
+    @classmethod
+    def parse_bytes(cls, message_bytes: bytes):
+        message_length = len(message_bytes)
+        if message_length != 10:
+            raise ProtocolError("Expected length of 10 bytes for message payload.")
+
+        return PortModeInformation()
+
+    def __init__(self):
+        pass
+
+    @property
+    def value(self):
+        header = CommonMessageHeader(10, self.MESSAGE_TYPE)
+        return header.value
+
+
+class PortModeInformationFormat:
+
+    @classmethod
+    def validate(cls, message_bytes: bytes):
+        message_length = len(message_bytes)
+        if cls.EXPECTED_LENGTH and message_length != cls.EXPECTED_LENGTH:
+            message = 'Message length: {length} is different from expected length: {expected}. For type: {typename}'\
+                .format(length=message_length, expected=cls.EXPECTED_LENGTH, typename=cls.MODE_INFORMATION_TYPE.name)
+            raise ProtocolError(message)
+
+
+class PortModeInformationName(PortModeInformationFormat):
+    MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.NAME)
+
+    EXPECTED_LENGTH = 14
+
+    @classmethod
+    def parse_bytes(cls, message_bytes: bytes):
+        PortModeInformationFormat.validate(cls, message_bytes)
+
+
