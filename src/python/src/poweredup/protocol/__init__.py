@@ -26,7 +26,7 @@ class ValueMapping:
                 if value is None:
                     value = ValueMapping.__NONE__
                 if mapping.__contains__(value):
-                    raise f"Value mapping contains duplicate entry: {str(value)}"
+                    raise Exception(f"Value mapping contains duplicate entry: {str(value)}")
                 mapping[value] = item
         return mapping
 

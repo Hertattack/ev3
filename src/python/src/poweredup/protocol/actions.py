@@ -6,7 +6,7 @@ class ActionType(ValueMapping):
     SWITCH_OFF = b'\x01'
     DISCONNECT = b'\x02'
     VCC_PORT_CTRL_ON = b'\x03'
-    VCC_PORT_CTRL_OFF = b'\x03'
+    VCC_PORT_CTRL_OFF = b'\x04'
     ACTIVATE_BUSY_INDICATION = b'\x05'
     RESET_BUSY_INDICATION = b'\x06'
 
