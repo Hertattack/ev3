@@ -123,7 +123,7 @@ class PortModes:
             (PortModes.MODE_13 if self.mode_13 else 0) + \
             (PortModes.MODE_14 if self.mode_14 else 0) + \
             (PortModes.MODE_15 if self.mode_15 else 0), \
-        2, byteorder="big", signed=False)
+            2, byteorder="big", signed=False)
 
 
 class PortModeCombinationIndex(ValueMapping):
@@ -385,8 +385,8 @@ class PortInformation(Message):
         if self.information_type == InformationType.MODE_INFO:
             header = CommonMessageHeader(8, self.MESSAGE_TYPE)
             return header.value + self.port_id.value + self.information_type.value + self.capabilities.value + \
-                    self.total_count_mode.to_bytes(1, byteorder="big", signed=False) + \
-                    self.input_modes.value + self.output_modes.value
+                   self.total_count_mode.to_bytes(1, byteorder="big", signed=False) + \
+                   self.input_modes.value + self.output_modes.value
         else:
             combinations = len(self.mode_combinations)
             header = CommonMessageHeader(2 + combinations * 2, self.MESSAGE_TYPE)
@@ -404,38 +404,82 @@ class PortModeInformation(Message):
     @classmethod
     def parse_bytes(cls, message_bytes: bytes):
         message_length = len(message_bytes)
-        if message_length != 10:
-            raise ProtocolError("Expected length of 10 bytes for message payload.")
+        if message_length < 4:
+            raise ProtocolError("Expected length of at least 4 bytes for message payload.")
 
-        return PortModeInformation()
+        port_id = PortID(message_bytes[0:1])
+        information_format = PortModeInformationFormat.parse_bytes(message_bytes[1:])
 
-    def __init__(self):
-        pass
+        return PortModeInformation(port_id, information_format)
+
+    def __init__(self, port_id, information_format):
+        self.port_id = port_id
+        self.mode_information_type = information_format.MODE_INFORMATION_TYPE
+        self.mode_information = information_format
 
     @property
     def value(self):
-        header = CommonMessageHeader(10, self.MESSAGE_TYPE)
-        return header.value
+        mode_information_bytes = self.mode_information.value
+        header = CommonMessageHeader(len(mode_information_bytes)-1, self.MESSAGE_TYPE)
+        return header.value + self.port_id.value + mode_information_bytes
 
 
 class PortModeInformationFormat:
 
     @classmethod
-    def validate(cls, message_bytes: bytes):
+    def parse_bytes(cls, message_bytes: bytes):
+        mode = message_bytes[0:1]
+        mode_information_type = PortModeInformationType(message_bytes[1:2])
+        match mode_information_type.value:
+            case PortModeInformationName.MODE_INFORMATION_TYPE.value:
+                return PortModeInformationName.parse_bytes(mode, message_bytes[2:])
+
+        raise ProtocolError(f"Unimplemented port mode information type encountered: '{mode_information_type.name}'")
+
+    @classmethod
+    def validate(cls, message_bytes: bytes, max_length: int = None, expected_length: int = None):
         message_length = len(message_bytes)
-        if cls.EXPECTED_LENGTH and message_length != cls.EXPECTED_LENGTH:
-            message = 'Message length: {length} is different from expected length: {expected}. For type: {typename}'\
-                .format(length=message_length, expected=cls.EXPECTED_LENGTH, typename=cls.MODE_INFORMATION_TYPE.name)
+        if expected_length and message_length != expected_length:
+            message = 'Message length: {length} is different from expected length: {expected}. For type: {typename}' \
+                    .format(length=message_length, expected=expected_length, typename=cls.MODE_INFORMATION_TYPE.name)
             raise ProtocolError(message)
+        if max_length and message_length > max_length:
+            message = 'Message length: {length} is larger than allowed length of: {expected}. For type: {typename}' \
+                    .format(length=message_length, expected=max_length, typename=cls.MODE_INFORMATION_TYPE.name)
+            raise ProtocolError(message)
+
+    def __init__(self, mode):
+        self.mode = mode
+
+    @property
+    def value(self):
+        return self.mode + self.MODE_INFORMATION_TYPE.value
 
 
 class PortModeInformationName(PortModeInformationFormat):
     MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.NAME)
 
-    EXPECTED_LENGTH = 14
+    MAX_LENGTH = 11
 
     @classmethod
-    def parse_bytes(cls, message_bytes: bytes):
-        PortModeInformationFormat.validate(cls, message_bytes)
+    def parse_bytes(cls, mode: bytes, message_bytes: bytes):
+        cls.validate(message_bytes, max_length=PortModeInformationName.MAX_LENGTH)
 
+        name = ""
 
+        for char_int_value in message_bytes:
+            if not ((48 <= char_int_value <= 57) or (65 <= char_int_value <= 90) or (
+                    97 <= char_int_value <= 122) or char_int_value == 95):
+                raise ProtocolError(f"Name contains unsupported characters: {chr(char_int_value)}")
+
+            name += chr(char_int_value)
+
+        return PortModeInformationName(mode, name)
+
+    def __init__(self, mode, name):
+        super().__init__(mode)
+        self.name = name
+
+    @property
+    def value(self):
+        return super().value + bytes(self.name, 'UTF-8')
