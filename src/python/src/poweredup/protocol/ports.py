@@ -439,6 +439,8 @@ class PortModeInformationFormat:
                 return PortModeInformationPercentageRange.parse_bytes(mode, message_bytes[2:])
             case PortModeInformationSiRange.MODE_INFORMATION_TYPE.value:
                 return PortModeInformationSiRange.parse_bytes(mode, message_bytes[2:])
+            case PortModeInformationSymbol.MODE_INFORMATION_TYPE.value:
+                return PortModeInformationSymbol.parse_bytes(mode, message_bytes[2:])
 
         raise ProtocolError(f"Unimplemented port mode information type encountered: '{mode_information_type.name}'")
 
@@ -469,7 +471,7 @@ class PortModeInformationName(PortModeInformationFormat):
 
     @classmethod
     def parse_bytes(cls, mode: bytes, message_bytes: bytes):
-        cls.validate(message_bytes, max_length=PortModeInformationName.MAX_LENGTH)
+        cls.validate(message_bytes, max_length=cls.MAX_LENGTH)
 
         name = ""
 
@@ -532,3 +534,28 @@ class PortModeInformationPercentageRange(PortModeInformationFloatingPointValues)
 
 class PortModeInformationSiRange(PortModeInformationFloatingPointValues):
     MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.SI)
+
+
+class PortModeInformationSymbol(PortModeInformationFormat):
+    MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.SYMBOL)
+
+    MAX_LENGTH = 5
+
+    @classmethod
+    def parse_bytes(cls, mode: bytes, message_bytes: bytes):
+        cls.validate(message_bytes, max_length=cls.MAX_LENGTH)
+
+        symbol = ""
+
+        for char_int_value in message_bytes:
+            symbol += chr(char_int_value)
+
+        return PortModeInformationSymbol(mode, symbol)
+
+    def __init__(self, mode, symbol):
+        super().__init__(mode)
+        self.symbol = symbol
+
+    @property
+    def value(self):
+        return super().value + bytes(self.symbol, 'UTF-8')

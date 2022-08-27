@@ -69,3 +69,11 @@ def test_port_mode_information_si_message_is_supported():
     assert message.mode_information_type.name == "SI"
     assert message.mode_information.min_value == float(-1)
     assert message.mode_information.max_value == float(2)
+
+
+def test_port_mode_symbol_message_is_supported():
+    message_bytes = b'\x09\x00\x44\x01\x00\x04\x44\x45\x47'
+    message = Message.parse_bytes(message_bytes)
+    assert message.value.hex() == message_bytes.hex()
+    assert message.mode_information_type.name == "SYMBOL"
+    assert message.mode_information.symbol == "DEG"
