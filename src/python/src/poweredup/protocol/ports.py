@@ -435,6 +435,10 @@ class PortModeInformationFormat:
                 return PortModeInformationName.parse_bytes(mode, message_bytes[2:])
             case PortModeInformationRaw.MODE_INFORMATION_TYPE.value:
                 return PortModeInformationRaw.parse_bytes(mode, message_bytes[2:])
+            case PortModeInformationPercentage.MODE_INFORMATION_TYPE.value:
+                return PortModeInformationPercentage.parse_bytes(mode, message_bytes[2:])
+            case PortModeInformationSi.MODE_INFORMATION_TYPE.value:
+                return PortModeInformationSi.parse_bytes(mode, message_bytes[2:])
 
         raise ProtocolError(f"Unimplemented port mode information type encountered: '{mode_information_type.name}'")
 
@@ -487,21 +491,31 @@ class PortModeInformationName(PortModeInformationFormat):
         return super().value + bytes(self.name, 'UTF-8')
 
 
-class PortModeInformationRaw(PortModeInformationFormat):
-    MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.RAW)
-
+class PortModeInformationFloatingPointValues(PortModeInformationFormat):
     MAX_LENGTH = 8
 
     @classmethod
     def parse_bytes(cls, mode: bytes, message_bytes: bytes):
         cls.validate(message_bytes, max_length=PortModeInformationName.MAX_LENGTH)
 
-        return PortModeInformationRaw(mode, message_bytes)
+        return cls(mode, message_bytes)
 
-    def __init__(self, mode, raw_value):
+    def __init__(self, mode, byte_value):
         super().__init__(mode)
-        self.raw_value = raw_value
+        self.byte_value = byte_value
 
     @property
     def value(self):
-        return super().value + self.raw_value
+        return super().value + self.byte_value
+
+
+class PortModeInformationRaw(PortModeInformationFloatingPointValues):
+    MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.RAW)
+
+
+class PortModeInformationPercentage(PortModeInformationFloatingPointValues):
+    MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.PERCENTAGE)
+
+
+class PortModeInformationSi(PortModeInformationFloatingPointValues):
+    MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.SI)

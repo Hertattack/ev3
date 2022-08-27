@@ -35,4 +35,20 @@ def test_port_mode_information_raw_message_is_supported():
     message = Message.parse_bytes(message_bytes)
     assert message.value.hex() == message_bytes.hex()
     assert message.mode_information_type.name == "RAW"
-    assert message.mode_information.raw_value.hex() == "10203040"
+    assert message.mode_information.byte_value.hex() == "10203040"
+
+
+def test_port_mode_information_percentage_message_is_supported():
+    message_bytes = b'\x0A\x00\x44\x01\x00\x02\xAB\x20\x30\x40'
+    message = Message.parse_bytes(message_bytes)
+    assert message.value.hex() == message_bytes.hex()
+    assert message.mode_information_type.name == "PERCENTAGE"
+    assert message.mode_information.byte_value.hex() == "ab203040"
+
+
+def test_port_mode_information_si_message_is_supported():
+    message_bytes = b'\x0A\x00\x44\x01\x00\x03\x10\xAA\x30\x40'
+    message = Message.parse_bytes(message_bytes)
+    assert message.value.hex() == message_bytes.hex()
+    assert message.mode_information_type.name == "SI"
+    assert message.mode_information.byte_value.hex() == "10aa3040"
