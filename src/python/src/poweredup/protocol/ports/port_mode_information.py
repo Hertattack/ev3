@@ -2,7 +2,7 @@ import struct
 
 from src.poweredup.protocol import ProtocolError, ValueMapping
 from src.poweredup.protocol.messages import Message, MessageType, CommonMessageHeader
-from src.poweredup.protocol.ports.port import PortID
+from src.poweredup.protocol.ports.port import PortID, ValueFormat
 
 
 class ModeInformationType(ValueMapping):
@@ -269,6 +269,75 @@ class PortModeInformationMapping(PortModeInformationFormat):
     @property
     def value(self):
         return super().value + self.input_mapping.value + self.output_mapping.value
+
+
+class PortModeInformationMotorBias(PortModeInformationFormat):
+    MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.MOTOR_BIAS)
+
+    EXPECTED_LENGTH = 1
+
+    MIN_VALUE = 0
+    MAX_VALUE = 100
+
+    @classmethod
+    def parse_bytes(cls, mode: bytes, message_bytes: bytes):
+        cls.validate(message_bytes, expected_length=cls.EXPECTED_LENGTH)
+
+        value = int.from_bytes(message_bytes, byteorder="big", signed=False)
+        if cls.MIN_VALUE < value > cls.MAX_VALUE:
+            raise ProtocolError(f"Motor bias value {value} out of range: {cls.MIN_VALUE} - {cls.MAX_VALUE}")
+
+        return PortModeInformationMotorBias(mode, value)
+
+    def __init__(self, mode: bytes, bias: int):
+        super().__init__(mode)
+        self.bias = bias
+
+    @property
+    def value(self):
+        return super().value + self.bias.to_bytes(1, byteorder="big", signed=False)
+
+
+class PortModeInformationCapabilities(PortModeInformationFormat):
+    MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.CAPABILITY_BITS)
+
+    EXPECTED_LENGTH = 6
+
+    @classmethod
+    def parse_bytes(cls, mode: bytes, message_bytes: bytes):
+        cls.validate(message_bytes, expected_length=cls.EXPECTED_LENGTH)
+
+        return PortModeInformationCapabilities(mode, message_bytes)
+
+    def __init__(self, mode: bytes, capabilities: bytes):
+        super().__init__(mode)
+        self.capabilities = capabilities
+
+    @property
+    def value(self):
+        return super().value + self.capabilities
+
+
+class PortModeInformationValue(PortModeInformationFormat):
+    MODE_INFORMATION_TYPE = ModeInformationType(ModeInformationType.VALUE_FORMAT)
+
+    EXPECTED_LENGTH = 4
+
+    @classmethod
+    def parse_bytes(cls, mode: bytes, message_bytes: bytes):
+        cls.validate(message_bytes, expected_length=cls.EXPECTED_LENGTH)
+
+        value_format = ValueFormat.parse_bytes(message_bytes)
+
+        return PortModeInformationValue(mode, value_format)
+
+    def __init__(self, mode: bytes, value_format: ValueFormat):
+        super().__init__(mode)
+        self.value_format = value_format
+
+    @property
+    def value(self):
+        return super().value + self.value_format.value
 
 
 class PortModeInformation(Message):

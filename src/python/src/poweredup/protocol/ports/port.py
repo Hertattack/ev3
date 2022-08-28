@@ -1,4 +1,4 @@
-from src.poweredup.protocol import ProtocolError
+from src.poweredup.protocol import ProtocolError, ValueMapping
 
 
 class PortModes:
@@ -113,3 +113,39 @@ class Capabilities:
             (Capabilities.LOGICAL_COMBINABLE if self.is_combinable else 0) +
             (Capabilities.LOGICAL_SYNCABLE if self.is_syncable else 0),
             1, byteorder="big", signed=False)
+
+
+class DataSetType(ValueMapping):
+    EIGHT_BIT = b'\x00'
+    SIXTEEN_BIT = b'\x01'
+    THIRTY_TWO_BIT = b'\x10'
+    FLOAT = b'\x11'
+
+
+class ValueFormat:
+    @classmethod
+    def parse_bytes(cls, message_bytes: bytes):
+        message_length = len(message_bytes)
+        if message_length != 4:
+            raise ProtocolError(f"Expected a value format of exactly 4 bytes, received: {str(message_length)}.")
+
+        data_set_count = int.from_bytes(message_bytes[0:1], byteorder="big", signed=False)
+        data_set_type = DataSetType(message_bytes[1:2])
+        nr_of_figures = int.from_bytes(message_bytes[2:3], byteorder="big", signed=False)
+        nr_of_decimals = int.from_bytes(message_bytes[3:4], byteorder="big", signed=False)
+
+        return ValueFormat(data_set_count, data_set_type, nr_of_figures, nr_of_decimals)
+
+    def __init__(self, data_set_count: int, data_set_type: DataSetType, nr_of_figures: int, nr_of_decimals: int):
+        self.data_set_count = data_set_count
+        self.data_set_type = data_set_type
+        self.nr_of_figures = nr_of_figures
+        self.nr_of_decimals = nr_of_decimals
+
+    @property
+    def value(self):
+        return int.to_bytes(self.data_set_count, 1,  byteorder="big", signed=False) + \
+                self.data_set_type.value + \
+                int.to_bytes(self.nr_of_figures, 1, byteorder="big", signed=False) + \
+                int.to_bytes(self.nr_of_decimals, 1, byteorder="big", signed=False)
+
