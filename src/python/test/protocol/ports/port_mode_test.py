@@ -1,4 +1,4 @@
-from src.poweredup.protocol.ports import PortModeMapping
+from src.poweredup.protocol.ports.port_mode_information import PortModeMapping
 
 
 def test_port_mode_mapping_is_supported():

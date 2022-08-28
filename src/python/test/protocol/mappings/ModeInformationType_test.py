@@ -1,4 +1,4 @@
-from src.poweredup.protocol.ports import ModeInformationType
+from src.poweredup.protocol.ports.port_mode_information import ModeInformationType
 
 
 def test_mode_information_supports_name():

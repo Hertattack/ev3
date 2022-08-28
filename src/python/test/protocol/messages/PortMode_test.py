@@ -1,5 +1,6 @@
 import pytest
-from src.poweredup.protocol.ports import PortModes
+
+from src.poweredup.protocol.ports.port import PortModes
 
 
 @pytest.mark.parametrize('value, expected_modes', [

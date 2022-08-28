@@ -2,7 +2,6 @@ import struct
 
 from src.poweredup.protocol import ProtocolError
 from src.poweredup.protocol.messages import Message
-from src.poweredup.protocol.ports import PortModeInformation, PortModeMapping
 
 
 def test_port_mode_information_name_message_is_supported():
@@ -85,14 +84,14 @@ def test_port_mode_mapping_message_is_supported():
     assert message.value.hex() == message_bytes.hex()
     assert message.mode_information_type.name == "MAPPING"
 
-    input_mapping: PortModeMapping = message.mode_information.input_mapping
+    input_mapping = message.mode_information.input_mapping
     assert input_mapping.null_value == False
     assert input_mapping.functional_mapping_2 == True
     assert input_mapping.absolute == True
     assert input_mapping.relative == True
     assert input_mapping.discrete == False
 
-    output_mapping: PortModeMapping = message.mode_information.output_mapping
+    output_mapping = message.mode_information.output_mapping
     assert output_mapping.null_value == True
     assert output_mapping.functional_mapping_2 == True
     assert output_mapping.absolute == False

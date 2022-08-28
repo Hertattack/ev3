@@ -1,5 +1,4 @@
 from src.poweredup.protocol.messages import Message
-from src.poweredup.protocol.ports import PortInformation
 
 
 def test_mode_combination_supported():

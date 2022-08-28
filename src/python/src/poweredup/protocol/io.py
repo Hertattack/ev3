@@ -1,6 +1,6 @@
 from . import ValueMapping, VersionNumberEncoding, ProtocolError
 from .messages import MessageType, CommonMessageHeader, Message
-from .ports import PortID
+from .ports.port import PortID
 
 
 class EventType(ValueMapping):

@@ -1,7 +1,6 @@
 import pytest
 from src.poweredup.protocol import ProtocolError
-from src.poweredup.protocol.messages import Message, MessageType
-from src.poweredup.protocol.alerts import AlertMessage, AlertOperation, AlertStatus
+from src.poweredup.protocol.messages import Message
 
 
 @pytest.mark.parametrize('alert_type, alert_operation, expected_value', [
@@ -10,7 +9,7 @@ from src.poweredup.protocol.alerts import AlertMessage, AlertOperation, AlertSta
 ])
 def test_alert_message_without_payload(alert_type: bytes, alert_operation: bytes, expected_value: bytes):
     message_bytes = b'\x05\x00\x03' + alert_type + alert_operation
-    alert_message: AlertMessage = Message.parse_bytes(message_bytes)
+    alert_message = Message.parse_bytes(message_bytes)
     assert alert_message.alert_type.value == alert_type
     assert alert_message.operation.value == alert_operation
     assert alert_message.value == expected_value
