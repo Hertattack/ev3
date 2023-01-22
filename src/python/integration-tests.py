@@ -20,7 +20,8 @@ except:
     print(f"Invalid option: {choice}")
     sys.exit(1)
 
-print(f"Running test {choice}: {test_class.name()}")
+test_name = test_class.name()
+print(f"Running test {choice}: {test_name}")
 
 test = test_class()
 test.run(sys.argv)
