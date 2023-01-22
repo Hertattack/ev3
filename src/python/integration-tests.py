@@ -5,7 +5,8 @@ from integration_test import available_tests
 print("Please specify the integration test to run")
 test_index = 1
 for test_option in available_tests:
-    print(f"{test_index}) {test_option.name()}")
+    test_name = test_option.name()
+    print(f"{test_index}) {test_name}")
     test_index += 1
 
 choice = input("Your choice?")
