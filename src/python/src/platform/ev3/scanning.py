@@ -1,3 +1,4 @@
+import asyncio
 from bluepy.btle import Scanner as BtleScanner, DefaultDelegate
 
 class ScanDelegate(DefaultDelegate):
@@ -18,10 +19,15 @@ class Scanner:
     def __init__(self):
         self._scanner_impl = None
 
-    def scan(self, discovery_function):
+    async def scan(self, discovery_function):
         if self._scanner_impl is not None:
             raise "Scanner already initialized"
 
         self._scanner_impl = BtleScanner().withDelegate(ScanDelegate(discovery_function))
 
         self._scanner_impl.scan(10)
+
+        await asyncio.sleep(10, result='hello')
+
+    def stop_scan(self):
+        pass
