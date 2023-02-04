@@ -1,6 +1,6 @@
 import asyncio
 
-from src.util.scanning import Scanner
+from src.platform.windows.scanning import Scanner
 
 from .base import BaseIntegrationTest
 

@@ -60,7 +60,6 @@ The steps followed:
 | [LEGO BLE Wireless Protocol](https://lego.github.io/lego-ble-wireless-protocol-docs/index.html)          | LEGO has published documentation for the protocol they have implemented for controlling the Powered Up hubs. | This is used as the basis to be able to decode and encode the messages to interact with the Powered Up system. See the [protocol](src/poweredup/protocol) folder for my implementation of it. |
 | [bluepy](https://github.com/IanHarvey/bluepy) + [documentation](https://ianharvey.github.io/bluepy-doc/) | Library for using ble in Python                                                                              | This is the library I use to send and receive the bluetooth messages for controlling the Technic Hub                                                                                          |
 | [Asus USB-BT500](https://www.amazon.com/ASUS-USB-BT500-Bluetooth-Backward-Compatible/dp/B08DFBNG7F)      | Bluetooth ble compatible adapter.                                                                            | Used to control the Technic Hub from the ev3                                                                                                                                                  |
-| [Bleak](https://bleak.readthedocs.io/en/latest/) | Bleutooth Low Enegy platform Agnostik Klient                                                                 | Bluetooth low energy library for python.                                                                                                                                                      |
 
 ## Information used along the way
 
@@ -102,3 +101,4 @@ The steps followed:
 - Moar bluetooth [https://reverse-engineering-ble-devices.readthedocs.io/en/latest/script_creation/00_script_creation.html](https://reverse-engineering-ble-devices.readthedocs.io/en/latest/script_creation/00_script_creation.html)
 - EV3 Powered Up (https://www.youtube.com/watch?v=RFHCahxJdAM)
 - BT LE support for ev3 - https://github.com/ev3dev/ev3dev/issues/711
+- [Bleak](https://bleak.readthedocs.io/en/latest/) ** does not work on ev3dev **
