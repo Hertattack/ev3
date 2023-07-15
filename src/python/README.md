@@ -51,6 +51,7 @@ The steps followed:
   * `sudo pip3 install bluepy`
 * ... more to come ...
 
+Note: the default password for the ev3dev ssh connection is maker, username robot.
 
 # Resources
 
